@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Price Trackr",
+  "version": "1.0.0",
+  "description": "Track prices across e-commerce platforms and get notified of deals",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://amazon.in/*",
+    "https://amazon.com/*",
+    "https://flipkart.com/*",
+    "https://myntra.com/*",
+    "https://croma.com/*",
+    "https://ajio.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://amazon.in/*",
+        "https://amazon.com/*",
+        "https://flipkart.com/*",
+        "https://myntra.com/*",
+        "https://croma.com/*",
+        "https://ajio.com/*"
+      ],
+      "js": ["content_script.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "Price Trackr"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
