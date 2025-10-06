@@ -1,56 +1,53 @@
-# Price Trackr 📊
+📈 Price Trackr
+Welcome to Price Trackr, a 100% self-hosted, open-source solution for monitoring product prices across the web. This project is designed to run with zero operational costs on a single VPS, using a modern tech stack.
 
-A comprehensive price tracking application that monitors product prices across multiple e-commerce platforms and alerts users when prices drop.
+✨ Features
+Real-time Tracking: Add products via URL and get live price updates.
 
-## Features
+Historical Charts: Visualize price history to make informed decisions.
 
-- 🔍 **Multi-Platform Scraping**: Track prices from Amazon, Flipkart, Myntra, Croma, and Ajio
-- 🚨 **Smart Alerts**: Get notified via email when prices drop below your target
-- 📈 **Price History**: View detailed price trends and analytics
-- 🌐 **Real-time Updates**: WebSocket-powered live price updates
-- 🎯 **Sale Detection**: Automatic detection of sales and discounts
-- 🔌 **Browser Extension**: Quick product addition from any e-commerce site
-- 📱 **Responsive UI**: Beautiful, mobile-friendly interface built with React + Tailwind
+Watchlist & Alerts: Get notified when prices drop below your target.
 
-## Architecture
+Sales Awareness: Discover ongoing sales from various e-commerce platforms.
 
-- **Backend**: FastAPI + PostgreSQL + Redis
-- **Frontend**: React + TypeScript + Vite + Tailwind CSS
-- **Worker**: Playwright-based web scraping service
-- **Extension**: Chrome/Firefox browser extension
-- **Infrastructure**: Docker + Nginx + systemd
+PWA & Browser Extension: Access your data from anywhere.
 
-## Quick Start
+Scalable Architecture: Built with a modular, production-ready backend and frontend.
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/price-trackr.git
-cd price-trackr
-```
+🚀 Quick Start
+Clone the repository: git clone <your-repo-url> /opt/price-trackr
 
-2. Start with Docker Compose:
-```bash
-cd infra
-docker-compose up -d
-```
+Configure: Copy .env.example to .env and fill in your details.
 
-3. Access the application:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
+Build & Run: docker compose -f infra/docker-compose.yml up --build -d
 
-## Documentation
+See the docs/deployment-guide.md for a comprehensive setup guide, including SSL configuration with Nginx and Certbot.
 
-- [System Architecture](docs/system-architecture.md)
-- [API Reference](docs/api-reference.md)
-- [Scraper Guide](docs/scraper-guide.md)
-- [Deployment Guide](docs/deployment-guide.md)
-- [Roadmap](docs/roadmap.md)
+⚖️ License
+This project is licensed under the MIT License. See the LICENSE file for details.📈 Price Trackr
+Welcome to Price Trackr, a 100% self-hosted, open-source solution for monitoring product prices across the web. This project is designed to run with zero operational costs on a single VPS, using a modern tech stack.
 
-## Contributing
+✨ Features
+Real-time Tracking: Add products via URL and get live price updates.
 
-We welcome contributions! Please read our contributing guidelines and submit pull requests.
+Historical Charts: Visualize price history to make informed decisions.
 
-## License
+Watchlist & Alerts: Get notified when prices drop below your target.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Sales Awareness: Discover ongoing sales from various e-commerce platforms.
+
+PWA & Browser Extension: Access your data from anywhere.
+
+Scalable Architecture: Built with a modular, production-ready backend and frontend.
+
+🚀 Quick Start
+Clone the repository: git clone <your-repo-url> /opt/price-trackr
+
+Configure: Copy .env.example to .env and fill in your details.
+
+Build & Run: docker compose -f infra/docker-compose.yml up --build -d
+
+See the docs/deployment-guide.md for a comprehensive setup guide, including SSL configuration with Nginx and Certbot.
+
+⚖️ License
+This project is licensed under the MIT License. See the LICENSE file for details.

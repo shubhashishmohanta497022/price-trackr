@@ -1,33 +1,80 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, asc
 from typing import List, Optional
-from datetime import datetime, timedelta
-from app.models.price_log import PriceLog
-from app.schemas.price_schema import PriceLogCreate
+from datetime import datetime
 
-def create_price_log(db: Session, price_log: PriceLogCreate) -> PriceLog:
-    db_price_log = PriceLog(**price_log.dict())
+from .. import models
+from ..schemas import price_schema
+
+def create_price_log(db: Session, price: price_schema.PriceLogCreate, product_id: int) -> models.PriceLog:
+    """
+    Creates a new price log entry for a specific product.
+
+    This function is typically called by the scraper worker after it has
+    successfully fetched new price information for a product.
+
+    Args:
+        db: The SQLAlchemy database session.
+        price: A Pydantic schema containing the new price data.
+        product_id: The ID of the product this price log belongs to.
+
+    Returns:
+        The newly created PriceLog model instance.
+    """
+    db_price_log = models.PriceLog(**price.model_dump(), product_id=product_id)
     db.add(db_price_log)
     db.commit()
     db.refresh(db_price_log)
     return db_price_log
 
-def get_price_logs(db: Session, product_id: int, limit: int = 100) -> List[PriceLog]:
-    return db.query(PriceLog).filter(PriceLog.product_id == product_id).order_by(desc(PriceLog.timestamp)).limit(limit).all()
+def get_price_logs_for_product(
+    db: Session, 
+    product_id: int, 
+    skip: int = 0, 
+    limit: int = 1000,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None
+) -> List[models.PriceLog]:
+    """
+    Retrieves the historical price logs for a single product.
 
-def get_price_logs_by_date_range(db: Session, product_id: int, start_date: datetime, end_date: datetime) -> List[PriceLog]:
-    return db.query(PriceLog).filter(
-        PriceLog.product_id == product_id,
-        PriceLog.timestamp >= start_date,
-        PriceLog.timestamp <= end_date
-    ).order_by(asc(PriceLog.timestamp)).all()
+    Allows for pagination and filtering by a date range, which is useful
+    for displaying charts for specific time periods (e.g., "Last 30 Days").
 
-def get_latest_price(db: Session, product_id: int) -> Optional[PriceLog]:
-    return db.query(PriceLog).filter(PriceLog.product_id == product_id).order_by(desc(PriceLog.timestamp)).first()
+    Args:
+        db: The SQLAlchemy database session.
+        product_id: The ID of the product to fetch history for.
+        skip: The number of records to skip (for pagination).
+        limit: The maximum number of records to return.
+        start_date: The optional start date for filtering.
+        end_date: The optional end date for filtering.
 
-def get_lowest_price(db: Session, product_id: int, days: int = 30) -> Optional[PriceLog]:
-    cutoff_date = datetime.utcnow() - timedelta(days=days)
-    return db.query(PriceLog).filter(
-        PriceLog.product_id == product_id,
-        PriceLog.timestamp >= cutoff_date
-    ).order_by(asc(PriceLog.price)).first()
+    Returns:
+        A list of PriceLog model instances, ordered by most recent first.
+    """
+    query = db.query(models.PriceLog).filter(models.PriceLog.product_id == product_id)
+    
+    if start_date:
+        query = query.filter(models.PriceLog.scraped_at >= start_date)
+    if end_date:
+        query = query.filter(models.PriceLog.scraped_at <= end_date)
+        
+    return query.order_by(models.PriceLog.scraped_at.desc()).offset(skip).limit(limit).all()
+
+def get_latest_price_for_product(db: Session, product_id: int) -> Optional[models.PriceLog]:
+    """
+    Retrieves only the most recent price log for a specific product.
+
+    This is a convenience function to quickly get the "current" price without
+    fetching the entire history.
+
+    Args:
+        db: The SQLAlchemy database session.
+        product_id: The ID of the product.
+
+    Returns:
+        The most recent PriceLog model instance, or None if no history exists.
+    """
+    return db.query(models.PriceLog)\
+        .filter(models.PriceLog.product_id == product_id)\
+        .order_by(models.PriceLog.scraped_at.desc())\
+        .first()

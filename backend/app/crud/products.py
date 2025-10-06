@@ -1,42 +1,78 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
-from typing import List, Optional
-from app.models.product import Product
-from app.models.price_log import PriceLog
-from app.schemas.product_schema import ProductCreate, ProductUpdate
+from .. import models
+from ..schemas import product_schema
 
-def get_product(db: Session, product_id: int) -> Optional[Product]:
-    return db.query(Product).filter(Product.id == product_id).first()
+def get_product(db: Session, product_id: int):
+    """
+    Fetches a single product from the database by its primary key (ID).
 
-def get_products(db: Session, skip: int = 0, limit: int = 100, user_id: int = None) -> List[Product]:
-    query = db.query(Product)
-    if user_id:
-        query = query.filter(Product.user_id == user_id)
-    return query.offset(skip).limit(limit).all()
+    Args:
+        db: The SQLAlchemy database session.
+        product_id: The ID of the product to retrieve.
 
-def create_product(db: Session, product: ProductCreate, user_id: int) -> Product:
-    db_product = Product(**product.dict(), user_id=user_id)
+    Returns:
+        The Product model instance if found, otherwise None.
+    """
+    return db.query(models.Product).filter(models.Product.id == product_id).first()
+
+def get_product_by_url(db: Session, url: str):
+    """
+    Fetches a single product from the database by its unique URL.
+
+    Args:
+        db: The SQLAlchemy database session.
+        url: The URL of the product to retrieve.
+
+    Returns:
+        The Product model instance if found, otherwise None.
+    """
+    return db.query(models.Product).filter(models.Product.url == url).first()
+
+def get_products(db: Session, skip: int = 0, limit: int = 100):
+    """
+    Fetches a paginated list of all products from the database.
+
+    Args:
+        db: The SQLAlchemy database session.
+        skip: The number of records to skip (for pagination).
+        limit: The maximum number of records to return.
+
+    Returns:
+        A list of Product model instances.
+    """
+    return db.query(models.Product).offset(skip).limit(limit).all()
+
+def create_product(db: Session, product: product_schema.ProductCreate):
+    """
+    Creates a new product record in the database.
+
+    Args:
+        db: The SQLAlchemy database session.
+        product: A Pydantic schema containing the new product's data.
+
+    Returns:
+        The newly created Product model instance.
+    """
+    db_product = models.Product(**product.model_dump())
     db.add(db_product)
     db.commit()
     db.refresh(db_product)
     return db_product
 
-def update_product(db: Session, product_id: int, product_update: ProductUpdate) -> Optional[Product]:
-    db_product = db.query(Product).filter(Product.id == product_id).first()
-    if db_product:
-        for key, value in product_update.dict(exclude_unset=True).items():
-            setattr(db_product, key, value)
-        db.commit()
-        db.refresh(db_product)
-    return db_product
+def get_or_create_product(db: Session, product_data: product_schema.ProductCreate):
+    """
+    A utility function that retrieves a product by URL if it exists,
+    or creates it if it does not. This is the primary method for adding
+    new products to prevent duplicates.
 
-def delete_product(db: Session, product_id: int) -> bool:
-    db_product = db.query(Product).filter(Product.id == product_id).first()
-    if db_product:
-        db.delete(db_product)
-        db.commit()
-        return True
-    return False
+    Args:
+        db: The SQLAlchemy database session.
+        product_data: A Pydantic schema with the product's data, including the URL.
 
-def get_product_price_history(db: Session, product_id: int, limit: int = 50) -> List[PriceLog]:
-    return db.query(PriceLog).filter(PriceLog.product_id == product_id).order_by(desc(PriceLog.timestamp)).limit(limit).all()
+    Returns:
+        An existing or newly created Product model instance.
+    """
+    db_product = get_product_by_url(db, url=product_data.url)
+    if db_product:
+        return db_product
+    return create_product(db, product=product_data)

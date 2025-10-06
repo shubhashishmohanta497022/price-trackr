@@ -1,263 +1,108 @@
-# Scraper Development Guide
+🕷️ Scraper Development Guide
+This guide explains how to add a new e-commerce site scraper to the Price Trackr worker.
 
-## Overview
+1. Core Architecture
+The scraping engine is designed to be modular and extensible. The core of this design is the BaseScraper abstract class located in worker/playwright_scraper/base_scraper.py.
 
-This guide explains how to develop and maintain scrapers for Price Trackr. Scrapers are responsible for extracting product information from e-commerce websites.
+Every new site-specific scraper must inherit from this base class. This enforces a consistent interface and ensures that every scraper returns data in the same, predictable format (ScrapedData Pydantic model), which the rest of the system can then process.
 
-## Architecture
+2. How to Add a New Scraper
+Let's add a scraper for a fictional site, coolstuff.com.
 
-### Base Scraper Class
+Step 1: Find CSS Selectors
+Before writing any code, you need to identify the CSS selectors for the data you want to extract.
 
-All scrapers inherit from `BaseScraper` which provides:
-- Playwright browser management
-- Anti-bot detection handling
-- Common utility methods
-- Error handling framework
+Go to a product page on the target website (e.g., https://www.coolstuff.com/product/widget-pro).
 
-### Scraper Structure
+Open your browser's Developer Tools (usually by pressing F12 or right-clicking and selecting "Inspect").
 
-```python
+Use the "Inspector" or "Elements" tab to find the HTML elements containing the product title, price, and availability.
+
+Find a stable and unique CSS selector for each element. IDs are best, followed by specific class names. Avoid highly generic or auto-generated class names.
+
+Example findings for coolstuff.com:
+
+Title: An <h1> tag with the ID #product-title.
+
+Price: A <span> tag with the class .product-price__value.
+
+Availability: A <div> tag with the class .stock-status--in-stock.
+
+Step 2: Create the Scraper File
+Create a new Python file in the scrapers directory:
+worker/playwright_scraper/scrapers/coolstuff.py
+
+Step 3: Implement the Scraper Class
+Inside your new file, create a class that inherits from BaseScraper and implement the required abstract methods using the selectors you found.
+
+# worker/playwright_scraper/scrapers/coolstuff.py
+
+from typing import Optional
 from ..base_scraper import BaseScraper
-from ..utils.parser import parser
 
-class MyPlatformScraper(BaseScraper):
-    def __init__(self):
-        super().__init__()
-        self.domains = ['myplatform.com']
+class CoolStuffScraper(BaseScraper):
+    """
+    Scraper for coolstuff.com.
+    """
 
-    def can_scrape(self, url: str) -> bool:
-        domain = self.extract_domain(url)
-        return 'myplatform.com' in domain
+    def _scrape_title(self) -> Optional[str]:
+        """Scrapes the product title using its ID."""
+        try:
+            # self.page is the Playwright Page object from the base class
+            return self.page.locator("#product-title").inner_text()
+        except Exception:
+            return None
 
-    async def scrape_product(self, url: str) -> Dict[str, Any]:
-        # Implementation here
-        pass
-```
+    def _scrape_price(self) -> Optional[str]:
+        """Scrapes the raw price string from the page."""
+        try:
+            # The base class will handle cleaning this string (e.g., "₹1,299.00")
+            return self.page.locator(".product-price__value").inner_text()
+        except Exception:
+            return None
 
-## Adding New Scrapers
+    def _scrape_availability(self) -> Optional[str]:
+        """Scrapes the availability status."""
+        try:
+            # We can check for the existence of an element
+            if self.page.locator(".stock-status--in-stock").is_visible():
+                return "In Stock"
+            elif self.page.locator(".stock-status--out-of-stock").is_visible():
+                return "Out of Stock"
+            return None
+        except Exception:
+            return None
+    
+    # You can also implement optional methods if the data is available
+    def _scrape_brand(self) -> Optional[str]:
+        try:
+            # Example: Find a link with a specific data attribute
+            return self.page.locator("a[data-test-id='product-brand-link']").inner_text()
+        except Exception:
+            return None
 
-### 1. Create Scraper File
+Step 4: Register the New Scraper
+The final and most important step is to tell the worker that your new scraper exists.
 
-Create a new file in `worker/playwright_scraper/scrapers/` following the naming convention `platform_name.py`.
+Open the runner file: worker/playwright_scraper/runner.py
 
-### 2. Implement Required Methods
+Import your new scraper class at the top of the file.
 
-#### `can_scrape(url: str) -> bool`
-Determines if this scraper can handle the given URL.
+Add an entry to the SCRAPER_MAPPING dictionary, mapping the site's domain to your new class.
 
-```python
-def can_scrape(self, url: str) -> bool:
-    domain = self.extract_domain(url)
-    return any(d in domain for d in self.domains)
-```
+# worker/playwright_scraper/runner.py
 
-#### `scrape_product(url: str) -> Dict[str, Any]`
-Main scraping logic. Must return a dictionary with:
+# ... other imports
+from .scrapers.amazon import AmazonScraper
+from .scrapers.flipkart import FlipkartScraper
+from .scrapers.coolstuff import CoolStuffScraper # 1. Import your new class
 
-```python
-{
-    'name': str,              # Product name
-    'price': float,           # Current price
-    'original_price': float,  # Original price (for sales)
-    'availability': str,      # Stock status
-    'image_url': str,         # Product image URL
-    'description': str,       # Product description
-    'platform': str,          # Platform identifier  
-    'scraped_at': float       # Timestamp
+# ...
+
+SCRAPER_MAPPING = {
+    'www.amazon.in': AmazonScraper,
+    '[www.flipkart.com](https://www.flipkart.com)': FlipkartScraper,
+    '[www.coolstuff.com](https://www.coolstuff.com)': CoolStuffScraper, # 2. Add the mapping
 }
-```
 
-### 3. Element Selection Strategy
-
-Use multiple selectors for robustness:
-
-```python
-# Try multiple selectors for name
-name_selectors = [
-    '.product-title',
-    'h1.title',
-    '.product-name'
-]
-name = ""
-for selector in name_selectors:
-    name = await self.safe_get_text(selector)
-    if name:
-        break
-```
-
-### 4. Price Extraction
-
-Use the parser utility for consistent price handling:
-
-```python
-price_text = await self.safe_get_text('.price')
-current_price = parser.clean_price(price_text)
-```
-
-### 5. Error Handling
-
-Wrap scraping logic in try-catch blocks:
-
-```python
-try:
-    await self.page.goto(url, wait_until='networkidle', timeout=30000)
-    await self.handle_bot_detection()
-
-    # Scraping logic here
-
-except Exception as e:
-    logger.error(f"Error scraping {platform} product {url}: {e}")
-    raise Exception(f"Failed to scrape {platform} product: {str(e)}")
-```
-
-## Best Practices
-
-### 1. Robust Element Selection
-- Use multiple selector strategies
-- Prefer data attributes over classes when available
-- Test selectors regularly as sites change
-
-### 2. Bot Detection Handling
-- Add random delays
-- Use realistic user agents
-- Handle CAPTCHAs gracefully
-- Monitor for detection patterns
-
-### 3. Performance Optimization
-- Block unnecessary resources (images, CSS)
-- Use networkidle wait state
-- Implement reasonable timeouts
-
-### 4. Data Validation
-- Validate extracted data
-- Handle missing information gracefully
-- Use consistent data formats
-
-### 5. Error Recovery
-- Implement retry logic
-- Log detailed error information
-- Fail gracefully with meaningful errors
-
-## Testing Scrapers
-
-### Unit Testing
-
-```python
-import pytest
-from scrapers.my_platform import MyPlatformScraper
-
-@pytest.mark.asyncio
-async def test_scraper():
-    scraper = MyPlatformScraper()
-
-    async with scraper:
-        result = await scraper.scrape_product('https://myplatform.com/product/123')
-
-    assert result['name']
-    assert result['price'] > 0
-    assert result['platform'] == 'myplatform'
-```
-
-### Manual Testing
-
-1. Test with various product URLs
-2. Verify all data fields are populated
-3. Check price parsing accuracy
-4. Test error handling with invalid URLs
-
-## Common Challenges
-
-### 1. Dynamic Content Loading
-- Use appropriate wait strategies
-- Wait for specific elements to load
-- Handle single-page applications
-
-### 2. Anti-Bot Measures
-- Rotate user agents
-- Use proxy servers when needed
-- Implement human-like behavior
-
-### 3. Site Structure Changes
-- Monitor scraper health
-- Implement alerts for failures
-- Regular maintenance updates
-
-### 4. Rate Limiting
-- Implement delays between requests
-- Respect robots.txt
-- Use distributed scraping
-
-## Maintenance
-
-### Monitoring
-- Track scraper success rates
-- Monitor for structure changes
-- Set up health checks
-
-### Updates
-- Regular selector updates
-- Performance optimizations
-- New feature additions
-
-### Documentation
-- Document selector changes
-- Update test cases
-- Maintain compatibility notes
-
-## Platform-Specific Notes
-
-### Amazon
-- Multiple price selectors due to A/B testing
-- Handle different page layouts
-- Deal with region-specific changes
-
-### Flipkart
-- Login popups need handling
-- Dynamic price loading
-- Multiple product page formats
-
-### Myntra
-- Image lazy loading
-- Size/variant handling
-- Fashion-specific attributes
-
-### Croma
-- Electronics-specific data
-- Availability variations
-- Promotional pricing
-
-### Ajio
-- Fashion focus
-- Brand-specific layouts
-- Size chart integration
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Empty Results**: Check if selectors still exist
-2. **Bot Detection**: Update anti-detection measures
-3. **Timeout Errors**: Increase wait times or optimize loading
-4. **Price Parsing**: Verify currency formats and number handling
-
-### Debugging Tools
-
-- Browser developer tools
-- Playwright inspector
-- Screenshot on error
-- Network request logging
-
-## Performance Metrics
-
-Track these metrics for each scraper:
-- Success rate
-- Average response time
-- Error frequency
-- Data accuracy
-
-## Security Considerations
-
-- Don't store sensitive data
-- Use secure connections
-- Respect privacy policies
-- Implement rate limiting
+# ... rest of the file

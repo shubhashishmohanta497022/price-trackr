@@ -1,477 +1,131 @@
-# Price Trackr Deployment Guide
+🚀 Deployment Guide: Price Trackr
+This guide provides a complete walkthrough for deploying the Price Trackr application stack to a production environment on a Linux VPS using Docker Compose.
 
-## Prerequisites
+Prerequisites
+Before you begin, ensure you have the following:
 
-### System Requirements
-- Linux server (Ubuntu 20.04+ recommended)
-- Docker and Docker Compose
-- At least 4GB RAM
-- 20GB available disk space
-- Domain name (optional)
+A Virtual Private Server (VPS): A fresh server running a modern Linux distribution (Ubuntu 22.04 LTS is recommended).
 
-### Software Dependencies
-- Docker 20.10+
-- Docker Compose 2.0+
-- Git
-- Nginx (if not using Docker)
+Minimum Specs: 2 vCPU, 4GB RAM, 50GB SSD.
 
-## Quick Start (Docker Compose)
+A Domain Name: A registered domain name (e.g., yourdomain.com) with DNS records pointed to your VPS's IP address. You will need A records for yourdomain.com, api.yourdomain.com, and ws.yourdomain.com.
 
-### 1. Clone Repository
-```bash
-git clone https://github.com/yourusername/price-trackr.git
-cd price-trackr
-```
+SSH Access: You must be able to connect to your VPS as a user with sudo privileges.
 
-### 2. Environment Configuration
-```bash
-cp .env.example .env
-nano .env
-```
+Step 1: Server Setup & Docker Installation
+First, connect to your server and install Docker and Docker Compose, which are required to run the application.
 
-Configure these variables:
-```env
-# Database
-DATABASE_URL=postgresql://postgres:your_password@postgres:5432/price_trackr
-REDIS_URL=redis://redis:6379
+Connect to your VPS via SSH:
 
-# Security
-SECRET_KEY=your-super-secret-key-here
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
+ssh your_user@your_server_ip
 
-# Email Configuration
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-EMAIL_ADDRESS=your-email@gmail.com
-EMAIL_PASSWORD=your-app-password
+Install Docker Engine and Docker Compose: The most reliable way to do this is using Docker's official convenience script.
 
-# External URLs
-VITE_API_BASE_URL=http://your-domain.com
-VITE_WS_URL=ws://your-domain.com
-```
-
-### 3. Deploy Services
-```bash
-cd infra
-docker-compose up -d
-```
-
-### 4. Verify Deployment
-```bash
-# Check service status
-docker-compose ps
-
-# View logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f worker
-```
-
-### 5. Access Application
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
-
-## Production Deployment
-
-### 1. Server Preparation
-
-#### Update System
-```bash
-sudo apt update && sudo apt upgrade -y
-```
-
-#### Install Docker
-```bash
-curl -fsSL https://get.docker.com -o get-docker.sh
+# Download and run the Docker installation script
+curl -fsSL [https://get.docker.com](https://get.docker.com) -o get-docker.sh
 sudo sh get-docker.sh
-sudo usermod -aG docker $USER
-```
 
-#### Install Docker Compose
-```bash
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-```
+# Add your user to the 'docker' group to run docker commands without 'sudo'
+# You will need to log out and log back in for this to take effect.
+sudo usermod -aG docker ${USER}
 
-### 2. Application Setup
+After running this, log out of SSH and log back in to apply the group changes.
 
-#### Create Application Directory
-```bash
-sudo mkdir -p /opt/price-trackr
-sudo chown $USER:$USER /opt/price-trackr
+Step 2: Get the Application Code
+Clone the project repository from GitHub onto your server. The recommended location is /opt/price-trackr.
+
+# Clone the repository into /opt/price-trackr
+sudo git clone [https://github.com/your-username/price-trackr.git](https://github.com/your-username/price-trackr.git) /opt/price-trackr
+
+# Navigate into the project directory
 cd /opt/price-trackr
-```
 
-#### Clone and Configure
-```bash
-git clone https://github.com/yourusername/price-trackr.git .
+Step 3: Application Configuration
+Configure the application using the .env file and update the Nginx configuration.
+
+Create the .env file: Copy the example file to create your own configuration file.
+
 cp .env.example .env
-```
 
-#### Production Environment
-```env
-# Production settings
-NODE_ENV=production
-DEBUG=false
+Edit the .env file: Open the file with a text editor (like nano or vim) and set your values.
 
-# Database (use strong passwords)
-DATABASE_URL=postgresql://postgres:STRONG_PASSWORD@postgres:5432/price_trackr
+nano .env
 
-# Security (generate strong keys)
-SECRET_KEY=your-super-secure-secret-key-here
+You must set the following variables. Use strong, unique passwords.
 
-# Domain configuration
-VITE_API_BASE_URL=https://your-domain.com
-VITE_WS_URL=wss://your-domain.com
+# .env
+DOMAIN_NAME=yourdomain.com
+POSTGRES_USER=tracker_user
+POSTGRES_PASSWORD=a_very_strong_and_secret_password
+REDIS_PASSWORD=another_strong_secret_password
+SECRET_KEY=a_super_long_random_string_for_jwt_secrets
 
-# Email (use app passwords)
-EMAIL_ADDRESS=alerts@your-domain.com
-EMAIL_PASSWORD=your-app-specific-password
-```
+Configure Nginx: Replace the placeholder example.com in the Nginx config with your actual domain name.
 
-### 3. SSL/TLS Configuration
+# This command replaces all instances of the placeholder domains.
+# Make sure to use your actual domain here.
+sudo sed -i 's/[example.com/yourdomain.com/g](https://example.com/yourdomain.com/g)' infra/nginx/site.conf
+sudo sed -i 's/[api.example.com/api.yourdomain.com/g](https://api.example.com/api.yourdomain.com/g)' infra/nginx/site.conf
+sudo sed -i 's/[ws.example.com/ws.yourdomain.com/g](https://ws.example.com/ws.yourdomain.com/g)' infra/nginx/site.conf
 
-#### Generate SSL Certificate (Let's Encrypt)
-```bash
-sudo apt install certbot
-sudo certbot certonly --standalone -d your-domain.com
-```
+Step 4: Obtain SSL Certificates (HTTPS)
+We will use Certbot (via Docker) to get free SSL certificates from Let's Encrypt.
 
-#### Update Nginx Configuration
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name your-domain.com;
+Start Nginx Temporarily: Start only the Nginx container to serve the validation files for Certbot.
 
-    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+docker compose up -d nginx
 
-    # SSL optimization
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512;
-    ssl_prefer_server_ciphers off;
+Run Certbot: Execute the Certbot command to obtain the certificates. Replace the email and domains with your own.
 
-    # Rest of configuration...
-}
+docker compose run --rm certbot certonly --webroot --webroot-path /var/www/certbot \
+  -d yourdomain.com \
+  -d api.yourdomain.com \
+  -d ws.yourdomain.com \
+  --email your-email@example.com \
+  --agree-tos --no-eff-email
 
-# Redirect HTTP to HTTPS
-server {
-    listen 80;
-    server_name your-domain.com;
-    return 301 https://$server_name$request_uri;
-}
-```
+Stop Nginx:
 
-### 4. Database Setup
+docker compose down
 
-#### Initialize Database
-```bash
-docker-compose exec backend python -c "
-from app.database import engine, Base
-from app.models import *
-Base.metadata.create_all(bind=engine)
-print('Database initialized successfully')
-"
-```
+Enable SSL in Nginx: Now that you have the certificates, uncomment the SSL lines in your Nginx config.
 
-#### Run Migrations (if using Alembic)
-```bash
-docker-compose exec backend alembic upgrade head
-```
+# This command removes the '#' from the SSL-related lines.
+sudo sed -i 's/# ssl_/ssl_/g' infra/nginx/site.conf
 
-### 5. Service Management
+Step 5: Initialize the Database
+Before the first full launch, you need to create the database tables using Alembic migrations.
 
-#### Create Systemd Service
-```bash
-sudo cp infra/systemd/price-trackr.service /etc/systemd/system/
+Build the backend image:
+
+docker compose build backend
+
+Run the database migration:
+
+docker compose run --rm backend alembic upgrade head
+
+Step 6: Launch the Full Application
+You are now ready to launch the entire stack.
+
+docker compose up -d
+
+Your Price Trackr application should now be live and accessible at https://yourdomain.com. It might take a minute for all containers to start up.
+
+Step 7: (Optional) Install as a Systemd Service
+To ensure the application automatically starts on server boot, install the provided systemd service.
+
+Copy the service file:
+
+sudo cp infra/systemd/price-trackr.service /etc/systemd/system/price-trackr.service
+
+Reload the systemd daemon and enable the service:
+
 sudo systemctl daemon-reload
-sudo systemctl enable price-trackr
-sudo systemctl start price-trackr
-```
+sudo systemctl enable price-trackr.service
+sudo systemctl start price-trackr.service
 
-#### Service Commands
-```bash
-# Start services
-sudo systemctl start price-trackr
+Check the status:
 
-# Stop services
-sudo systemctl stop price-trackr
-
-# Restart services
-sudo systemctl restart price-trackr
-
-# Check status
-sudo systemctl status price-trackr
-```
-
-## Monitoring and Maintenance
-
-### 1. Health Checks
-
-#### Service Health
-```bash
-# Check all services
-docker-compose ps
-
-# Check individual service health
-curl http://localhost:8000/health
-curl http://localhost:8080/health
-```
-
-#### Database Health
-```bash
-docker-compose exec postgres pg_isready -U postgres
-```
-
-### 2. Backup Strategy
-
-#### Database Backup
-```bash
-# Create backup directory
-mkdir -p /opt/price-trackr/backups
-
-# Backup script
-#!/bin/bash
-BACKUP_DIR="/opt/price-trackr/backups"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="price_trackr_backup_$TIMESTAMP.sql"
-
-docker-compose exec -T postgres pg_dump -U postgres price_trackr > "$BACKUP_DIR/$BACKUP_FILE"
-gzip "$BACKUP_DIR/$BACKUP_FILE"
-
-# Keep only last 7 days of backups
-find $BACKUP_DIR -name "*.sql.gz" -mtime +7 -delete
-```
-
-#### Automated Backups
-```bash
-# Add to crontab
-crontab -e
-
-# Daily backup at 2 AM
-0 2 * * * /opt/price-trackr/scripts/backup.sh
-```
-
-### 3. Log Management
-
-#### View Logs
-```bash
-# All services
-docker-compose logs -f
-
-# Specific service
-docker-compose logs -f backend
-docker-compose logs -f worker
-
-# Follow logs with timestamp
-docker-compose logs -f -t backend
-```
-
-#### Log Rotation
-```bash
-# Configure in docker-compose.yml
-services:
-  backend:
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-```
-
-### 4. Performance Monitoring
-
-#### Resource Usage
-```bash
-# Docker stats
-docker stats
-
-# System resources
-htop
-df -h
-free -h
-```
-
-#### Application Metrics
-- Monitor API response times
-- Track scraper success rates
-- Database query performance
-- WebSocket connections
-
-## Scaling
-
-### 1. Horizontal Scaling
-
-#### Multiple Worker Instances
-```yaml
-# docker-compose.yml
-services:
-  worker:
-    # ... existing config
-    deploy:
-      replicas: 3
-```
-
-#### Load Balancing
-```nginx
-upstream backend {
-    server backend1:8000;
-    server backend2:8000;
-    server backend3:8000;
-}
-```
-
-### 2. Database Scaling
-
-#### Read Replicas
-- Configure PostgreSQL streaming replication
-- Route read queries to replicas
-- Keep writes on primary
-
-#### Connection Pooling
-```python
-# Increase connection pool size
-engine = create_engine(
-    DATABASE_URL,
-    pool_size=20,
-    max_overflow=0,
-    pool_pre_ping=True
-)
-```
-
-## Security Hardening
-
-### 1. Firewall Configuration
-```bash
-# UFW setup
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow ssh
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw enable
-```
-
-### 2. Docker Security
-```bash
-# Run containers as non-root
-USER 1000:1000
-
-# Read-only root filesystem
---read-only
-
-# Drop capabilities
---cap-drop=ALL
-```
-
-### 3. Application Security
-- Regular dependency updates
-- Security headers in Nginx
-- Rate limiting
-- Input validation
-- CORS configuration
-
-## Troubleshooting
-
-### Common Issues
-
-#### Service Won't Start
-```bash
-# Check logs
-docker-compose logs service_name
-
-# Check configuration
-docker-compose config
-
-# Restart specific service
-docker-compose restart service_name
-```
-
-#### Database Connection Issues
-```bash
-# Check database status
-docker-compose exec postgres pg_isready
-
-# Test connection
-docker-compose exec backend python -c "
-from app.database import engine
-try:
-    engine.connect()
-    print('Database connection successful')
-except Exception as e:
-    print(f'Database connection failed: {e}')
-"
-```
-
-#### High Memory Usage
-```bash
-# Check container resources
-docker stats
-
-# Restart services to free memory
-docker-compose restart
-```
-
-### Performance Issues
-
-#### Slow API Responses
-- Check database query performance
-- Monitor PostgreSQL slow query log
-- Optimize database indexes
-- Enable Redis caching
-
-#### Scraper Timeouts
-- Increase scraper timeouts
-- Add more worker instances
-- Implement retry mechanisms
-- Monitor target site performance
-
-## Updates and Maintenance
-
-### 1. Application Updates
-```bash
-# Pull latest changes
-git pull origin main
-
-# Rebuild and restart services
-docker-compose build --no-cache
-docker-compose up -d
-```
-
-### 2. Dependency Updates
-```bash
-# Update base images
-docker-compose pull
-
-# Rebuild with new dependencies
-docker-compose build --pull
-```
-
-### 3. Database Migrations
-```bash
-# Run migrations
-docker-compose exec backend alembic upgrade head
-
-# Check migration status
-docker-compose exec backend alembic current
-```
-
-## Support and Resources
-
-### Documentation
-- API documentation: `/docs` endpoint
-- System architecture: `docs/system-architecture.md`
-- Scraper guide: `docs/scraper-guide.md`
-
-### Monitoring
-- Application logs
-- System metrics
-- Database performance
-- User analytics
-
-### Backup and Recovery
-- Regular database backups
-- Configuration backups
-- Disaster recovery procedures
+sudo systemctl status price-trackr.service
+# To view live logs for all containers:
+cd /opt/price-trackr && docker compose logs -f

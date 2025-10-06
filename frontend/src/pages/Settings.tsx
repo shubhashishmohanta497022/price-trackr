@@ -1,231 +1,133 @@
-import React from 'react'
-import { 
-  BellIcon, 
-  CurrencyRupeeIcon, 
-  UserCircleIcon,
-  ShieldCheckIcon 
-} from '@heroicons/react/24/outline'
-import Button from '../components/shared/Button'
-import Input from '../components/shared/Input'
-import { useSettings } from '../context/SettingsContext'
+import { useState } from 'react';
+import { Palette, Bell, Shield, Database, Wifi, Globe, Info, HelpCircle } from 'lucide-react';
+import { Switch } from "@/components/shared/Switch"; // A custom Switch component
+import { Button } from "@/components/shared/Button"; // A custom Button component
+import clsx from 'clsx';
 
-const Settings: React.FC = () => {
-  const { settings, updateSettings, resetSettings } = useSettings()
+// In a real app, this would come from a state management store like Zustand or Context
+// e.g., import { useSettingsStore } from '@/stores/settingsStore';
+const useSettingsStore = () => {
+    const [settings, setSettings] = useState({
+        theme: 'dark',
+        compactMode: false,
+        pushNotifications: true,
+        priceDropAlerts: true,
+        saleNotifications: true,
+        priceDropThreshold: 10,
+        scamDetection: true,
+        anonymousTracking: false,
+        dataRetention: 30,
+        offlineMode: true,
+        realtimeUpdates: true,
+        currency: 'INR',
+        timeZone: 'IST',
+    });
+    const updateSetting = (key, value) => setSettings(prev => ({...prev, [key]: value}));
+    return { settings, updateSetting };
+}
 
-  const handleNotificationChange = (key: keyof typeof settings.notifications, value: boolean) => {
-    updateSettings({
-      notifications: {
-        ...settings.notifications,
-        [key]: value,
-      },
-    })
-  }
+// --- Reusable Child Components (would be in '@/components/settings/') ---
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Settings
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Customize your Price Trackr experience.
-        </p>
-      </div>
-
-      {/* Settings Sections */}
-      <div className="space-y-6">
-        {/* Profile Settings */}
-        <div className="card p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <UserCircleIcon className="w-6 h-6 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Profile Settings
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="Full Name"
-              type="text"
-              placeholder="Your full name"
-              defaultValue="John Doe"
-            />
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="your@email.com"
-              defaultValue="john@example.com"
-            />
-          </div>
-
-          <div className="flex justify-end mt-6">
-            <Button variant="primary">
-              Save Changes
-            </Button>
-          </div>
-        </div>
-
-        {/* Notification Settings */}
-        <div className="card p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <BellIcon className="w-6 h-6 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Notification Preferences
-            </h2>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">
-                  Email Notifications
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Receive notifications via email
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={settings.notifications.email}
-                onChange={(e) => handleNotificationChange('email', e.target.checked)}
-                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">
-                  Push Notifications
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Receive push notifications in browser
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={settings.notifications.push}
-                onChange={(e) => handleNotificationChange('push', e.target.checked)}
-                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">
-                  Price Drop Alerts
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Get notified when prices drop below your target
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={settings.notifications.priceDrops}
-                onChange={(e) => handleNotificationChange('priceDrops', e.target.checked)}
-                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">
-                  Daily Digest
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Receive daily summary of price changes
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={settings.notifications.dailyDigest}
-                onChange={(e) => handleNotificationChange('dailyDigest', e.target.checked)}
-                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Price Alert Settings */}
-        <div className="card p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <CurrencyRupeeIcon className="w-6 h-6 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Price Alert Settings
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="Default Price Drop Threshold (%)"
-              type="number"
-              min="1"
-              max="50"
-              value={settings.priceAlerts.defaultThreshold}
-              onChange={(e) => updateSettings({
-                priceAlerts: {
-                  ...settings.priceAlerts,
-                  defaultThreshold: parseInt(e.target.value),
-                },
-              })}
-              helperText="Default percentage drop to trigger alerts"
-            />
-
-            <Input
-              label="Maximum Active Alerts"
-              type="number"
-              min="1"
-              max="100"
-              value={settings.priceAlerts.maxAlerts}
-              onChange={(e) => updateSettings({
-                priceAlerts: {
-                  ...settings.priceAlerts,
-                  maxAlerts: parseInt(e.target.value),
-                },
-              })}
-              helperText="Maximum number of active price alerts"
-            />
-          </div>
-        </div>
-
-        {/* Data & Privacy */}
-        <div className="card p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <ShieldCheckIcon className="w-6 h-6 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Data & Privacy
-            </h2>
-          </div>
-
-          <div className="space-y-4">
-            <Button variant="outline">
-              Export My Data
-            </Button>
-
-            <Button variant="danger">
-              Delete Account
-            </Button>
-          </div>
-        </div>
-
-        {/* Reset Settings */}
-        <div className="card p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Reset Settings
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Reset all settings to their default values.
-          </p>
-          <Button 
-            variant="outline"
-            onClick={resetSettings}
-          >
-            Reset to Defaults
-          </Button>
+const SettingsSection = ({ icon, title, description, children }) => (
+  <div className="bg-brand-surface rounded-lg">
+    <div className="p-6 border-b border-brand-secondary">
+      <div className="flex items-center gap-4">
+        {icon}
+        <div>
+          <h2 className="text-xl font-semibold text-brand-text">{title}</h2>
+          <p className="text-sm text-brand-text-muted">{description}</p>
         </div>
       </div>
     </div>
-  )
-}
+    <div className="p-6 space-y-6">{children}</div>
+  </div>
+);
 
-export default Settings
+const SettingRow = ({ title, description, children, tooltip }) => (
+  <div className="flex flex-col sm:flex-row justify-between sm:items-center">
+    <div>
+      <h3 className="text-brand-text font-medium flex items-center gap-2">
+        {title}
+        {tooltip && (
+          <div className="group relative">
+            <HelpCircle size={16} className="text-brand-text-muted cursor-pointer" />
+            <div className="absolute bottom-full mb-2 w-64 bg-brand-dark text-brand-text-muted text-xs rounded-md p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              {tooltip}
+            </div>
+          </div>
+        )}
+      </h3>
+      <p className="text-sm text-brand-text-muted">{description}</p>
+    </div>
+    <div className="mt-2 sm:mt-0 flex-shrink-0">{children}</div>
+  </div>
+);
+
+// --- Main Settings Page Component ---
+
+const Settings = () => {
+  const { settings, updateSetting } = useSettingsStore();
+
+  return (
+    <div className="p-6 md:p-8 space-y-8 max-w-4xl mx-auto">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-brand-text">Settings</h1>
+        <p className="text-brand-text-muted">Configure your price tracking preferences and notifications.</p>
+      </div>
+      
+      {/* Settings Sections */}
+      <SettingsSection icon={<Palette className="text-brand-primary" />} title="Appearance" description="Customize the look and feel of the application.">
+        <SettingRow title="Theme" description="Choose your preferred theme.">
+          <div className="flex gap-2 rounded-md bg-brand-dark p-1">
+             <button onClick={() => updateSetting('theme', 'light')} className={clsx("px-4 py-1 rounded text-sm font-semibold", settings.theme === 'light' ? 'bg-brand-surface text-brand-text' : 'text-brand-text-muted')}>Light</button>
+             <button onClick={() => updateSetting('theme', 'dark')} className={clsx("px-4 py-1 rounded text-sm font-semibold", settings.theme === 'dark' ? 'bg-brand-surface text-brand-text' : 'text-brand-text-muted')}>Dark</button>
+          </div>
+        </SettingRow>
+        <SettingRow title="Compact Mode" description="Reduce padding to show more on screen.">
+            <Switch checked={settings.compactMode} onCheckedChange={(val) => updateSetting('compactMode', val)} />
+        </SettingRow>
+      </SettingsSection>
+      
+      <SettingsSection icon={<Bell className="text-brand-primary" />} title="Notifications" description="Manage how you receive price alerts.">
+          <SettingRow title="Push Notifications" description="Receive browser notifications.">
+            <Switch checked={settings.pushNotifications} onCheckedChange={(val) => updateSetting('pushNotifications', val)} />
+          </SettingRow>
+          <SettingRow title="Price Drop Alerts" description="Notify me when price drops below threshold.">
+             <Switch checked={settings.priceDropAlerts} onCheckedChange={(val) => updateSetting('priceDropAlerts', val)} />
+          </SettingRow>
+          <SettingRow title="Sale Notifications" description="Notify about upcoming major sales.">
+             <Switch checked={settings.saleNotifications} onCheckedChange={(val) => updateSetting('saleNotifications', val)} />
+          </SettingRow>
+          <SettingRow title="Price Drop Threshold (%)" description="Notify when price drops by this percentage.">
+            <div className='flex items-center gap-4 w-full max-w-xs'>
+                <input type="range" min="1" max="50" value={settings.priceDropThreshold} onChange={e => updateSetting('priceDropThreshold', parseInt(e.target.value))} className="w-full h-2 bg-brand-secondary rounded-lg appearance-none cursor-pointer" />
+                <span className='font-mono bg-brand-dark text-brand-text-muted px-3 py-1 rounded-md text-sm'>{settings.priceDropThreshold}%</span>
+            </div>
+          </SettingRow>
+      </SettingsSection>
+      
+      <SettingsSection icon={<Shield className="text-brand-primary" />} title="Privacy & Security" description="Control your data and security settings.">
+          <SettingRow title="Scam Detection" description="Warn about potential scam or low-trust sites." tooltip="Analyzes domain age and other signals to flag suspicious websites.">
+            <Switch checked={settings.scamDetection} onCheckedChange={(val) => updateSetting('scamDetection', val)} />
+          </Row>
+          <SettingRow title="Data Retention" description="How long to keep price history data.">
+             <select value={settings.dataRetention} onChange={e => updateSetting('dataRetention', parseInt(e.target.value))} className="bg-brand-dark border border-brand-secondary rounded-md px-3 py-1.5 text-brand-text focus:ring-2 focus:ring-brand-primary focus:outline-none">
+                 <option value={30}>30 Days</option>
+                 <option value={90}>90 Days</option>
+                 <option value={365}>1 Year</option>
+                 <option value={-1}>Forever</option>
+             </select>
+          </SettingRow>
+      </SettingsSection>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-4 pt-4 border-t border-brand-secondary">
+          <Button variant="secondary">Revert to Default</Button>
+          <Button>Save Settings</Button>
+      </div>
+    </div>
+  );
+};
+
+export default Settings;

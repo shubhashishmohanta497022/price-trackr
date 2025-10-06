@@ -1,69 +1,45 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import logging
 
-from app.config import settings
-from app.database import engine, Base
-from app.api.products import router as products_router
-from app.api.alerts import router as alerts_router
-from app.api.users import router as users_router
-from app.api.sales import router as sales_router
-from app.websocket.tracker_ws import WebSocketManager
+from .api import products, sales, alerts, users
+from .config import settings
+from .database import engine, Base
+from .websocket.tracker_ws import router as websocket_router
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Create tables
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    Base.metadata.create_all(bind=engine)
-    logger.info("Application startup complete")
-    yield
-    # Shutdown
-    logger.info("Application shutdown")
+# If you run alembic migrations manually, this line is not strictly needed.
+# However, it can be useful for initial setup or testing without migrations.
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Price Trackr API",
-    description="A comprehensive price tracking API",
+    title=settings.PROJECT_NAME,
+    description="A self-hosted, open-source price tracking solution.",
     version="1.0.0",
-    lifespan=lifespan
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/v1/openapi.json"
 )
 
-# Configure CORS
+# In a real production environment, you should be more restrictive
+# with your allowed origins. This configuration is permissive for development.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_HOSTS,
+    allow_origins=["*"],  # Allows all origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
-# Include routers
-app.include_router(products_router, prefix="/api/products", tags=["products"])
-app.include_router(alerts_router, prefix="/api/alerts", tags=["alerts"])
-app.include_router(users_router, prefix="/api/users", tags=["users"])
-app.include_router(sales_router, prefix="/api/sales", tags=["sales"])
-
-# WebSocket manager
-ws_manager = WebSocketManager()
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await ws_manager.connect(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            await ws_manager.send_personal_message(f"You wrote: {data}", websocket)
-    except WebSocketDisconnect:
-        ws_manager.disconnect(websocket)
-
-@app.get("/")
-async def root():
-    return {"message": "Welcome to Price Trackr API"}
-
-@app.get("/health")
+@app.get("/api/health", tags=["System"])
 async def health_check():
-    return {"status": "healthy"}
+    """
+    Simple health check endpoint to confirm the API is running.
+    """
+    return {"status": "ok", "project": settings.PROJECT_NAME}
+
+# Include API routers from other files
+app.include_router(products.router, prefix="/api/v1/products", tags=["Products"])
+app.include_router(sales.router, prefix="/api/v1/sales", tags=["Sales"])
+app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["Alerts"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
+app.include_router(websocket_router, prefix="/ws", tags=["WebSocket"])
+

@@ -1,114 +1,94 @@
-# Price Trackr System Architecture
+🏗️ System Architecture: Price Trackr
+This document provides a high-level overview of the Price Trackr system architecture, its components, and the flow of data between them.
 
-## Overview
+1. Core Philosophy
+The entire system is designed around a set of core principles:
 
-Price Trackr is a comprehensive price monitoring application built with a microservices architecture. The system consists of multiple components working together to provide real-time price tracking, alerts, and analytics.
+Zero Cost: Utilizes free, open-source software (FOSS) exclusively, with no reliance on paid APIs or services.
 
-## Architecture Components
+Self-Hosted: Built to run entirely on a single, user-controlled Virtual Private Server (VPS).
 
-### 1. Frontend (React + TypeScript)
-- **Technology**: React 18, TypeScript, Vite, Tailwind CSS
-- **Purpose**: User interface for managing products, viewing analytics, and configuring alerts  
-- **Features**:
-  - Responsive dashboard
-  - Product management
-  - Real-time price updates via WebSocket
-  - Price history charts
-  - Alert configuration
+Containerized: All components are isolated in Docker containers, orchestrated by Docker Compose for easy deployment and management.
 
-### 2. Backend API (FastAPI)
-- **Technology**: Python, FastAPI, SQLAlchemy, PostgreSQL
-- **Purpose**: Core business logic, data management, and API endpoints
-- **Features**:
-  - RESTful API endpoints
-  - User authentication & authorization
-  - Product management
-  - Price history tracking
-  - Alert system
-  - WebSocket for real-time updates
+Scalable & Modular: A clean separation of concerns between the frontend, backend, and worker allows for independent development, testing, and scaling.
 
-### 3. Worker Service (Playwright)
-- **Technology**: Python, Playwright, FastAPI
-- **Purpose**: Web scraping service for price data collection
-- **Features**:
-  - Multi-platform scrapers (Amazon, Flipkart, Myntra, etc.)
-  - Anti-bot detection measures
-  - Concurrent scraping
-  - Task queue management
-  - Error handling & retry logic
+2. Component Breakdown
+The application is a microservices-oriented architecture composed of six core services running in Docker containers.
 
-### 4. Browser Extension
-- **Technology**: JavaScript, Chrome Extension API
-- **Purpose**: Easy product addition from e-commerce sites
-- **Features**:
-  - One-click product tracking
-  - Automatic product data extraction
-  - Integration with main application
 
-### 5. Database Layer
-- **Primary Database**: PostgreSQL
-  - User data
-  - Product information  
-  - Price history
-  - Alert configurations
-- **Cache Layer**: Redis
-  - Session management
-  - Task queue
-  - Real-time data caching
+Getty Images
+Service
 
-## Data Flow
+Technology
 
-```
-Browser Extension → Backend API → Database
-                                ↓
-Worker Service ← Task Queue ← Scheduler
-     ↓
-Price Data → Backend API → WebSocket → Frontend
-```
+Responsibility
 
-## Key Features
+Nginx
 
-### Real-time Price Monitoring
-- Scheduled scraping jobs
-- Real-time price updates
-- WebSocket notifications
+Nginx
 
-### Intelligent Alerts
-- Price drop notifications
-- Email alerts
-- Custom threshold settings
+Reverse Proxy & SSL Termination. The single entry point for all web traffic. It routes requests to the appropriate service (frontend or backend) and handles HTTPS encryption.
 
-### Analytics & Insights
-- Price history visualization
-- Trend analysis
-- Sale detection
+Frontend
 
-### Multi-platform Support
-- Amazon India
-- Flipkart
-- Myntra
-- Croma
-- Ajio
+React (Vite) + TS
 
-## Security Considerations
+User Interface. A modern single-page application (SPA) that the user interacts with. It communicates with the backend via a REST API and WebSockets.
 
-- JWT-based authentication
-- Input validation & sanitization
-- Rate limiting
-- CORS configuration
-- Secure cookie handling
+Backend
 
-## Scalability
+FastAPI (Python)
 
-- Microservices architecture
-- Horizontal scaling capability
-- Load balancing with Nginx
-- Database connection pooling
-- Redis for caching and queues
+API & Business Logic. The brain of the application. It handles user authentication, manages database interactions, and dispatches tasks to the worker.
 
-## Deployment
+PostgreSQL
 
-- Docker containerization
-- Docker Compose orchestration
-- Nginx reverse proxy
-- Systemd service management
+PostgreSQL
+
+Primary Datastore. A relational database that stores all persistent data, including users, products, and historical price logs.
+
+Redis
+
+Redis
+
+Cache & Job Queue. Serves two critical roles: 1) As a message broker for the RQ job queue. 2) As a high-speed cache for temporary data (optional).
+
+Worker
+
+Playwright + RQ
+
+Scraping Engine. A background process that listens for scraping jobs on the Redis queue, runs Playwright to scrape websites, and saves the results to the PostgreSQL database.
+
+3. Data Flow & Request Lifecycle
+Understanding the flow of data is key to understanding the system.
+
+Architectural Diagram
+graph TD
+    subgraph User Browser
+        A[User]
+    end
+
+    subgraph "VPS (Docker Network)"
+        B(Nginx Reverse Proxy)
+        C(Frontend - React)
+        D(Backend - FastAPI)
+        E(Worker - Playwright)
+        F(PostgreSQL DB)
+        G(Redis - RQ Queue)
+    end
+
+    A -- HTTPS Request --> B
+
+    subgraph "Request Routing"
+        B -- Serves UI --> C
+        B -- Proxies API Call --> D
+        B -- Proxies WebSocket --> D
+    end
+    
+    C -- API Calls --> D
+    D -- Reads/Writes Data --> F
+    D -- Enqueues Job --> G
+    
+    E -- Listens for Jobs --> G
+    E -- Scrapes --> H[External E-commerce Site]
+    E -- Writes Scraped Data --> F

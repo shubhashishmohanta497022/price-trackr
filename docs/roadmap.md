@@ -1,308 +1,89 @@
-# Price Trackr Roadmap
+🗺️ Project Roadmap: Price Trackr
+This document outlines the planned features and strategic direction for the Price Trackr project. The roadmap is a living document and may evolve based on user feedback and technical feasibility.
 
-## Version 1.0 - Core Features ✅
+✅ v1.0: Minimum Viable Product (MVP) - (Current Version)
+The initial release focuses on establishing a stable, self-hostable, and functional core system.
 
-### Backend Infrastructure
-- [x] FastAPI backend with PostgreSQL
-- [x] User authentication & authorization
-- [x] Product management APIs
-- [x] Price logging system
-- [x] WebSocket real-time updates
+[x] Core Tracking Engine: Add products via URL and track prices.
 
-### Frontend Application  
-- [x] React + TypeScript frontend
-- [x] Responsive dashboard
-- [x] Product watchlist management
-- [x] Basic price history visualization
-- [x] User settings & preferences
+[x] Multi-Site Support: Functional scrapers for initial sites (Amazon, Flipkart).
 
-### Web Scraping Service
-- [x] Playwright-based scraper framework
-- [x] Multi-platform support (Amazon, Flipkart, Myntra, Croma, Ajio)
-- [x] Anti-bot detection handling
-- [x] Task queue system with Redis
+[x] Historical Data: Store and display price history on a chart.
 
-### Browser Extension
-- [x] Chrome/Firefox extension
-- [x] One-click product tracking
-- [x] Automatic product data extraction
-- [x] Integration with main application
+[x] User Accounts: Secure user registration and login with JWT.
 
-### Deployment & DevOps
-- [x] Docker containerization
-- [x] Docker Compose orchestration
-- [x] Nginx reverse proxy
-- [x] Basic monitoring & logging
+[x] Personal Watchlists: Users can manage their own list of tracked products.
 
-## Version 1.1 - Enhanced Analytics (Q2 2025)
+[x] Real-time UI: Basic WebSocket push for live updates.
 
-### Advanced Price Analytics
-- [ ] **Price prediction using ML models**
-  - Implement time series forecasting
-  - Predict future price trends
-  - Historical pattern analysis
+[x] Dockerized Deployment: Full stack deployment with a single docker-compose.yml.
 
-- [ ] **Advanced price charts**
-  - Multiple timeframe views (1D, 7D, 1M, 3M, 1Y)
-  - Interactive price charts with zoom
-  - Compare prices across platforms
-  - Export chart data
+[x] Secure Hosting: Nginx reverse proxy with SSL (HTTPS) via Certbot.
 
-- [ ] **Sale detection algorithm**
-  - Intelligent discount detection
-  - Fake sale identification
-  - Historical low price tracking
-  - Deal quality scoring
+[x] Basic Browser Extension: A functional Manifest v3 extension.
 
-### Enhanced User Experience
-- [ ] **Dark/Light theme toggle**
-- [ ] **Mobile app (React Native)**
-- [ ] **Push notifications**
-- [ ] **Email digest reports**
+⏳ v1.1: Quality of Life & Expansion - (Short-Term)
+This phase focuses on enhancing the user experience and expanding the platform's reach.
 
-## Version 1.2 - Smart Alerts (Q3 2025)
+[ ] Expanded Notification Channels:
 
-### Intelligent Alert System
-- [ ] **Dynamic price alerts**
-  - ML-based optimal price suggestions
-  - Seasonal trend awareness
-  - Stock availability alerts
-  - Price drop probability alerts
+[ ] Email notifications for price drops.
 
-- [ ] **Multi-channel notifications**
-  - Email notifications
-  - SMS alerts (Twilio integration)
-  - Browser push notifications
-  - Discord/Slack webhooks
+[ ] Telegram bot notifications.
 
-- [ ] **Alert management**
-  - Bulk alert operations
-  - Alert templates
-  - Custom alert conditions
-  - Alert history tracking
+[ ] More Scrapers: Add support for more popular e-commerce sites (e.g., Myntra, Croma, Ajio).
 
-### Advanced Features
-- [ ] **Wishlist sharing**
-  - Public/private wishlists
-  - Social sharing features
-  - Collaborative tracking
+[ ] Advanced Alerts:
 
-- [ ] **Price matching**
-  - Find same product on different platforms
-  - Automatic cross-platform comparison
-  - Best deal recommendations
+[ ] "Back in Stock" notifications.
 
-## Version 1.3 - Platform Expansion (Q4 2025)
+[ ] Percentage-based drop alerts (e.g., "notify me on a 10% drop").
 
-### New E-commerce Platforms
-- [ ] **Indian Platforms**
-  - Nykaa (beauty & cosmetics)
-  - FirstCry (baby products)
-  - BigBasket (groceries)
-  - Zomato/Swiggy (food delivery)
+[ ] Improved UI/UX:
 
-- [ ] **International Platforms**
-  - Amazon.com (US)
-  - eBay
-  - AliExpress
-  - Walmart
+[ ] Add historical price charts directly to the browser extension popup.
 
-- [ ] **Category-specific Sites**
-  - BookMyShow (events)
-  - MakeMyTrip (travel)
-  - Urban Company (services)
-  - Zomato Gold (dining)
+[ ] User-configurable dashboard widgets.
 
-### Enhanced Scraping
-- [ ] **Proxy rotation system**
-- [ ] **CAPTCHA solving integration**
-- [ ] **Distributed scraping network**
-- [ ] **Real-time price monitoring**
+[ ] "Lowest Ever Price" badge on product cards.
 
-## Version 2.0 - AI & Machine Learning (Q1 2026)
+[ ] User Analytics: A personal dashboard for users to see their total potential savings.
 
-### AI-Powered Features
-- [ ] **Personalized recommendations**
-  - ML-based product suggestions
-  - User behavior analysis
-  - Preference learning
-  - Collaborative filtering
+🚀 v1.2: Intelligence & Community Features - (Mid-Term)
+This phase aims to make the tracker smarter and more collaborative.
 
-- [ ] **Smart price alerts**
-  - AI-optimized alert timing
-  - Personalized deal scoring
-  - Context-aware notifications
-  - Learning user preferences
+[ ] AI-Powered Price Forecasting:
 
-- [ ] **Market analysis**
-  - Industry price trend analysis
-  - Competitor pricing insights
-  - Market demand forecasting
-  - Seasonal pattern detection
+[ ] Analyze historical data to predict whether a price is likely to rise or fall.
 
-### Advanced Analytics
-- [ ] **Business intelligence dashboard**
-  - Market share analysis
-  - Price elasticity insights
-  - Consumer behavior patterns
-  - Vendor performance metrics
+[ ] Display a "Good Time to Buy" indicator.
 
-- [ ] **API for developers**
-  - Public API access
-  - Webhook integrations
-  - Third-party app support
-  - Developer documentation
+[ ] Community Deal Discussions:
 
-## Version 2.1 - Enterprise Features (Q2 2026)
+[ ] A comments section on each product page for users to share deals, reviews, and advice.
 
-### Business Solutions
-- [ ] **Multi-user accounts**
-  - Team collaboration features
-  - Role-based access control
-  - Shared watchlists
-  - Admin dashboard
+[ ] Crowdsourced Offline Prices: Allow users to submit prices they find in physical stores to track local deals.
 
-- [ ] **Bulk operations**
-  - CSV import/export
-  - Batch product addition
-  - Mass alert configuration
-  - Automated reporting
+[ ] Advanced Scam Detection:
 
-- [ ] **Advanced integrations**
-  - Shopify integration
-  - WooCommerce plugin
-  - ERP system connectivity
-  - CRM integrations
+[ ] Analyze page content and user reviews for signs of fake products or scams.
 
-### Compliance & Security
-- [ ] **GDPR compliance**
-- [ ] **Enhanced security features**
-- [ ] **Audit logging**
-- [ ] **Data encryption**
+[ ] Import/Export Watchlist: Allow users to export their watchlist to CSV/JSON and import from other services.
 
-## Version 2.2 - Global Expansion (Q3 2026)
+🌌 v2.0: Platform Ecosystem - (Long-Term Vision)
+The long-term vision is to evolve Price Trackr from a tool into a comprehensive deal-finding ecosystem.
 
-### Internationalization
-- [ ] **Multi-language support**
-  - Hindi, Tamil, Telugu, Bengali
-  - Spanish, French, German
-  - Chinese, Japanese, Korean
+[ ] Official Mobile Apps:
 
-- [ ] **Multi-currency support**
-  - Real-time currency conversion
-  - Regional pricing display
-  - Currency trend tracking
+[ ] Cross-platform mobile application built with Flutter for iOS and Android.
 
-- [ ] **Regional platforms**
-  - Country-specific e-commerce sites
-  - Local pricing strategies
-  - Regional shipping tracking
+[ ] Public API: Offer a documented public API for developers to build their own tools on top of the Price Trackr data.
 
-### Advanced Features
-- [ ] **AR/VR integration**
-  - 3D product visualization
-  - Virtual try-on features
-  - Augmented shopping experience
+[ ] Expanded Browser Support: Release official extensions for Firefox and Safari.
 
-- [ ] **Blockchain integration**
-  - Price history verification
-  - Decentralized data storage
-  - Smart contract alerts
+[ ] Internationalization (i18n): Full support for multiple languages and currencies.
 
-## Version 3.0 - Ecosystem Platform (Q4 2026)
+[ ] Plugin System: Allow the community to develop and share their own scrapers as plugins.
 
-### Platform Features
-- [ ] **Third-party integrations**
-  - Plugin marketplace
-  - Custom scraper development
-  - Community-driven features
-  - Open-source contributions
-
-- [ ] **Advanced automation**
-  - Auto-purchase features
-  - Inventory management
-  - Supply chain integration
-  - Predictive restocking
-
-### Emerging Technologies
-- [ ] **Voice assistant integration**
-  - Alexa/Google Assistant skills
-  - Voice-activated alerts
-  - Spoken price queries
-
-- [ ] **IoT integration**
-  - Smart home device alerts
-  - Automated purchase triggers
-  - Physical price comparison
-
-## Long-term Vision (2027+)
-
-### Next-Generation Features
-- [ ] **Quantum computing optimization**
-- [ ] **Advanced AI recommendations**
-- [ ] **Predictive commerce**
-- [ ] **Automated negotiation**
-
-### Market Expansion
-- [ ] **B2B marketplace monitoring**
-- [ ] **Service price tracking**
-- [ ] **Real estate monitoring**
-- [ ] **Stock market integration**
-
-## Technical Roadmap
-
-### Infrastructure Improvements
-- [ ] **Microservices architecture**
-- [ ] **Kubernetes deployment**
-- [ ] **Multi-region support**
-- [ ] **Edge computing**
-
-### Performance Optimization
-- [ ] **Advanced caching strategies**
-- [ ] **Database optimization**
-- [ ] **CDN integration**
-- [ ] **Real-time processing**
-
-### Developer Experience
-- [ ] **GraphQL API**
-- [ ] **Improved documentation**
-- [ ] **Developer tools**
-- [ ] **Testing frameworks**
-
-## Community & Open Source
-
-### Open Source Initiatives
-- [ ] **Core platform open-sourcing**
-- [ ] **Community scraper contributions**
-- [ ] **Plugin development framework**
-- [ ] **Developer community building**
-
-### Documentation & Support
-- [ ] **Comprehensive documentation**
-- [ ] **Video tutorials**
-- [ ] **Community forums**
-- [ ] **Developer workshops**
-
-## Success Metrics
-
-### User Growth
-- **Target**: 100K+ active users by 2026
-- **Products tracked**: 10M+ products
-- **Price alerts sent**: 1B+ notifications
-
-### Technical Performance
-- **Uptime**: 99.9% availability
-- **Response time**: <200ms API responses
-- **Scraping accuracy**: >95% success rate
-
-### Business Goals
-- **Platform coverage**: 50+ e-commerce sites
-- **Geographic reach**: 10+ countries
-- **Enterprise customers**: 1000+ businesses
-
----
-
-*This roadmap is subject to change based on user feedback, market conditions, and technical considerations. We prioritize features based on user value and technical feasibility.*
-
-**Last updated**: January 2025
-**Next review**: March 2025
+🙌 Contributing
+This is an open-source project. If you are interested in contributing to any of the features listed above, please check

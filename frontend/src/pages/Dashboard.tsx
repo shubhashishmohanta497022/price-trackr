@@ -1,139 +1,139 @@
-import React, { useState, useEffect } from 'react'
-import { 
-  ChartBarIcon, 
-  HeartIcon, 
-  TagIcon, 
-  TrendingDownIcon 
-} from '@heroicons/react/24/outline'
-import StatCard from '../components/cards/StatCard'
-import ProductCard from '../components/cards/ProductCard'
-import LoadingSpinner from '../components/shared/Loader'
-import { Product } from '../types/product'
-import { productApi } from '../api/productApi'
+import { ArrowDownCircle, Bell, Tag, Target } from "lucide-react";
 
-const Dashboard: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+// --- Reusable Child Components (would be in '@/components/dashboard/') ---
+// For this file, we'll define them here for simplicity. In the final structure,
+// these would be imported from their own files.
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await productApi.getProducts()
-        setProducts(data.slice(0, 6)) // Show only 6 recent products
-      } catch (error) {
-        console.error('Error fetching products:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchProducts()
-  }, [])
-
-  const stats = [
-    {
-      title: 'Tracked Products',
-      value: products.length,
-      change: 12,
-      icon: <ChartBarIcon className="w-6 h-6" />,
-      color: 'primary' as const,
-    },
-    {
-      title: 'Active Alerts',
-      value: 5,
-      change: -3,
-      icon: <HeartIcon className="w-6 h-6" />,
-      color: 'warning' as const,
-    },
-    {
-      title: 'Sales Found',
-      value: 23,
-      change: 45,
-      icon: <TagIcon className="w-6 h-6" />,
-      color: 'success' as const,
-    },
-    {
-      title: 'Total Savings',
-      value: '₹12,450',
-      change: 28,
-      icon: <TrendingDownIcon className="w-6 h-6" />,
-      color: 'success' as const,
-    },
-  ]
-
-  if (isLoading) {
-    return <LoadingSpinner message="Loading dashboard..." />
-  }
-
-  return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Dashboard
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Welcome back! Here's what's happening with your tracked products.
-        </p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <StatCard
-            key={stat.title}
-            title={stat.title}
-            value={stat.value}
-            change={stat.change}
-            icon={stat.icon}
-            color={stat.color}
-          />
-        ))}
-      </div>
-
-      {/* Recent Products */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Recent Products
-          </h2>
-          <a
-            href="/watchlist"
-            className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-          >
-            View all →
-          </a>
-        </div>
-
-        {products.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <ChartBarIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No products yet
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Start tracking products to see them here.
-            </p>
-            <a
-              href="/add-product"
-              className="btn btn-primary"
-            >
-              Add Your First Product
-            </a>
-          </div>
-        )}
-      </div>
-    </div>
-  )
+interface StatCardProps {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+  subtitle: string;
 }
 
-export default Dashboard
+const StatCard: React.FC<StatCardProps> = ({ icon, title, value, subtitle }) => (
+  <div className="bg-brand-surface p-6 rounded-lg flex items-start space-x-4">
+    <div className="bg-brand-secondary p-3 rounded-md">{icon}</div>
+    <div>
+      <p className="text-sm text-brand-text-muted">{title}</p>
+      <p className="text-2xl font-bold text-brand-text">{value}</p>
+      <p className="text-xs text-brand-text-muted">{subtitle}</p>
+    </div>
+  </div>
+);
+
+// --- Main Dashboard Component ---
+
+const Dashboard = () => {
+  // --- Placeholder Data (simulating API response) ---
+  const stats = {
+    productsTracked: 247,
+    avgSavings: 1247,
+    activeAlerts: 18,
+    sitesMonitored: 42,
+  };
+
+  const activeAlerts = [
+    { id: 1, name: "Sony WH-1000XM5 Wireless Industry Leading...", price: "₹24,990" },
+    { id: 2, name: "Apple iPhone 15 Pro (256GB) - Natural Titanium", price: "₹1,19,900" },
+  ];
+  
+  const systemHealth = [
+      { name: "Amazon Scraper", status: "Operational", uptime: 99.8 },
+      { name: "Flipkart Scraper", status: "Operational", uptime: 99.9 },
+      { name: "Myntra Scraper", status: "Degraded", uptime: 92.1 },
+      { name: "WebSocket Updates", status: "Operational", uptime: 100 },
+  ];
+
+  return (
+    <div className="p-6 md:p-8 space-y-8">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-brand-text">Dashboard</h1>
+        <p className="text-brand-text-muted">Total prices across available platforms in real time.</p>
+      </div>
+
+      {/* Stats Cards Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          icon={<Tag size={24} className="text-brand-primary" />}
+          title="Products Tracked"
+          value={stats.productsTracked.toString()}
+          subtitle="across all sites"
+        />
+        <StatCard
+          icon={<ArrowDownCircle size={24} className="text-brand-success" />}
+          title="Avg. Savings"
+          value={`₹${stats.avgSavings.toLocaleString('en-IN')}`}
+          subtitle="per product"
+        />
+        <StatCard
+          icon={<Bell size={24} className="text-yellow-400" />}
+          title="Active Alerts"
+          value={stats.activeAlerts.toString()}
+          subtitle="triggered this week"
+        />
+        <StatCard
+          icon={<Target size={24} className="text-red-400" />}
+          title="Sites Monitored"
+          value={stats.sitesMonitored.toString()}
+          subtitle="active scrapers"
+        />
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Alerts & Trending */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Active Price Alerts */}
+          <div className="bg-brand-surface rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-brand-text">Active Price Alerts</h2>
+              <button className="text-sm text-brand-primary hover:underline">View All</button>
+            </div>
+            <ul className="space-y-4">
+              {activeAlerts.map(alert => (
+                <li key={alert.id} className="flex justify-between items-center bg-brand-dark p-4 rounded-md">
+                  <p className="text-brand-text-muted truncate pr-4">{alert.name}</p>
+                  <span className="font-bold text-brand-success whitespace-nowrap">{alert.price}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          {/* Trending Products (Placeholder) */}
+          <div className="bg-brand-surface rounded-lg p-6">
+             <h2 className="text-xl font-semibold text-brand-text mb-4">Trending Products</h2>
+             <p className="text-brand-text-muted text-center py-8">Trending products will be displayed here.</p>
+          </div>
+        </div>
+
+        {/* Right Column: System Health */}
+        <div className="bg-brand-surface rounded-lg p-6 h-fit">
+           <h2 className="text-xl font-semibold text-brand-text mb-6">System Health</h2>
+           <div className="space-y-5">
+              {systemHealth.map(service => (
+                <div key={service.name}>
+                  <div className="flex justify-between items-center text-sm mb-1">
+                    <span className="text-brand-text-muted">{service.name}</span>
+                    <span className={`font-semibold ${service.uptime > 95 ? 'text-brand-success' : 'text-yellow-400'}`}>
+                      {service.uptime}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-brand-dark rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full ${service.uptime > 95 ? 'bg-brand-success' : 'bg-yellow-400'}`}
+                      style={{ width: `${service.uptime}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
+

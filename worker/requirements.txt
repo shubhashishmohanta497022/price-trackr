@@ -1,0 +1,15 @@
+--- Core Scraping Libraries ---
+playwright==1.44.0
+beautifulsoup4==4.12.3
+
+--- Job Queue & Caching ---
+rq (Redis Queue) for handling background jobs
+rq==1.16.2
+
+redis client to connect to the Redis server
+redis==5.0.4
+
+--- Database Connector ---
+Driver for connecting to the PostgreSQL database
+The worker needs this to fetch product URLs and save scraped data.
+psycopg2-binary==2

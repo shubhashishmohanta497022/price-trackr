@@ -2,16 +2,36 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    
+    <!-- Link to a favicon for the browser tab -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    
+    <!-- The viewport meta tag is essential for responsive design. -->
+    <!-- It ensures the page scales correctly on different devices (mobile, tablet, desktop). -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Price Trackr - Smart Price Tracking</title>
-    <meta name="description" content="Track prices across multiple e-commerce platforms and get notified of the best deals" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <title>Price Trackr - Self-Hosted Price Monitoring</title>
+    <meta name="description" content="Track, compare, and get alerts on product prices across multiple e-commerce sites with this self-hosted, open-source solution."/>
   </head>
-  <body>
+  
+  <!-- 
+    The body has a dark background color by default, matching your app's theme.
+    This prevents a jarring white flash while the React application is loading.
+  -->
+  <body class="bg-brand-dark">
+    
+    <!-- 
+      This is the root container. The entire React application will be
+      rendered inside this single div element.
+    -->
     <div id="root"></div>
+    
+    <!-- 
+      This script tag is the entrypoint for the application.
+      Vite will automatically handle bundling and injecting all necessary
+      JavaScript and CSS files starting from this source file.
+      `type="module"` is required for modern JavaScript syntax.
+    -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

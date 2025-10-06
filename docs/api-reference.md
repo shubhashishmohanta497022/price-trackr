@@ -1,313 +1,207 @@
-# Price Trackr API Reference
+📖 API Reference: Price Trackr
+This document provides a detailed reference for the Price Trackr REST API.
 
-## Base URL
-```
-http://localhost:8000/api
-```
+Base URL: https://api.example.com
 
-## Authentication
-Most endpoints require authentication using JWT tokens. Include the token in the Authorization header:
-```
-Authorization: Bearer <your-jwt-token>
-```
+Interactive Documentation: For live, interactive API documentation, please visit:
 
-## Endpoints
+Swagger UI: https://api.example.com/api/docs
 
-### Authentication
+ReDoc: https://api.example.com/api/redoc
 
-#### POST /users/register
-Register a new user account.
+Authentication
+The API uses JWT (JSON Web Tokens) for authentication on protected endpoints.
 
-**Request Body:**
-```json
+Register: Create an account using the POST /api/v1/users/register endpoint.
+
+Login: Send your email (as username) and password to the POST /api/v1/users/token endpoint.
+
+Receive Token: A successful login will return an access_token.
+
+Authorize Requests: Include this token in the Authorization header of subsequent requests as a Bearer token.
+
+Example Header:
+
+Authorization: Bearer <your_access_token>
+
+Endpoints
+Products
+Endpoints for managing tracked products.
+
+POST /api/v1/products/track
+Adds a new product to be tracked by its URL. This queues a scraping job in the background.
+
+Method: POST
+
+Request Body:
+
 {
-  "email": "user@example.com",
-  "username": "username",
-  "password": "securepassword"
+  "url": "[https://www.amazon.in/dp/B09G952332](https://www.amazon.in/dp/B09G952332)"
 }
-```
 
-**Response:**
-```json
+Success Response (202 Accepted): Returns the newly created (or existing) product data.
+
 {
   "id": 1,
-  "email": "user@example.com",
-  "username": "username",
-  "is_active": true,
-  "is_verified": false,
-  "created_at": "2025-01-01T00:00:00Z"
-}
-```
-
-#### POST /users/token
-Login and get access token.
-
-**Request Body (Form Data):**
-- `username`: string
-- `password`: string
-
-**Response:**
-```json
-{
-  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-  "token_type": "bearer"
-}
-```
-
-#### GET /users/me
-Get current user information.
-
-**Headers:** Authorization required
-
-**Response:**
-```json
-{
-  "id": 1,
-  "email": "user@example.com",  
-  "username": "username",
-  "is_active": true,
-  "is_verified": false,
-  "created_at": "2025-01-01T00:00:00Z"
-}
-```
-
-### Products
-
-#### GET /products
-Get list of tracked products.
-
-**Query Parameters:**
-- `skip`: int (default: 0) - Number of records to skip
-- `limit`: int (default: 100) - Maximum number of records to return
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "iPhone 15 Pro",
-    "url": "https://amazon.in/iphone-15-pro",
-    "platform": "amazon",
-    "current_price": 134900.0,
-    "original_price": 134900.0,
-    "image_url": "https://...",
-    "description": "Latest iPhone model",
-    "availability": "In Stock",
-    "is_active": true,
-    "created_at": "2025-01-01T00:00:00Z",
-    "updated_at": null,
-    "user_id": 1
-  }
-]
-```
-
-#### POST /products
-Add a new product to track.
-
-**Request Body:**
-```json
-{
-  "name": "iPhone 15 Pro",
-  "url": "https://amazon.in/iphone-15-pro",
-  "platform": "amazon",
-  "description": "Latest iPhone model"
-}
-```
-
-**Response:**
-```json
-{
-  "id": 1,
-  "name": "iPhone 15 Pro",
-  "url": "https://amazon.in/iphone-15-pro",
-  "platform": "amazon",
-  "current_price": null,
-  "original_price": null,
+  "url": "[https://www.amazon.in/dp/B09G952332](https://www.amazon.in/dp/B09G952332)",
+  "title": "Tracking new product from www.amazon.in...",
+  "brand": null,
   "image_url": null,
-  "description": "Latest iPhone model",
-  "availability": "Unknown",
-  "is_active": true,
-  "created_at": "2025-01-01T00:00:00Z",
-  "updated_at": null,
-  "user_id": 1
+  "sku": null
 }
-```
 
-#### GET /products/{product_id}
-Get detailed information about a specific product, including price history.
+GET /api/v1/products/
+Retrieves a paginated list of all tracked products.
 
-**Response:**
-```json
+Method: GET
+
+Query Parameters:
+
+skip (integer, optional, default: 0): Number of products to skip.
+
+limit (integer, optional, default: 100): Maximum number of products to return.
+
+Success Response (200 OK):
+
+[
+  { "id": 1, "url": "...", "title": "..." },
+  { "id": 2, "url": "...", "title": "..." }
+]
+
+GET /api/v1/products/{product_id}
+Retrieves details for a single product, including its full price history.
+
+Method: GET
+
+Success Response (200 OK):
+
 {
   "id": 1,
-  "name": "iPhone 15 Pro",
-  "url": "https://amazon.in/iphone-15-pro",
-  "platform": "amazon",
-  "current_price": 134900.0,
-  "original_price": 134900.0,
-  "image_url": "https://...",
-  "description": "Latest iPhone model",
-  "availability": "In Stock",
-  "is_active": true,
-  "created_at": "2025-01-01T00:00:00Z",
-  "updated_at": null,
-  "user_id": 1,
-  "price_logs": [
+  "url": "[https://www.amazon.in/dp/B09G952332](https://www.amazon.in/dp/B09G952332)",
+  "title": "Sony WH-1000XM5 Wireless Headphones",
+  "brand": "Sony",
+  "price_history": [
     {
-      "id": 1,
+      "id": 101,
       "product_id": 1,
-      "price": 134900.0,
-      "discount_percentage": 0.0,
+      "price_cents": 2499000,
+      "currency": "INR",
       "availability": "In Stock",
-      "timestamp": "2025-01-01T00:00:00Z"
+      "scraped_at": "2025-10-06T10:30:00Z"
     }
   ]
 }
-```
 
-#### PUT /products/{product_id}
-Update product information.
+DELETE /api/v1/products/{product_id}
+Deletes a product and all its associated data.
 
-**Request Body:**
-```json
+Method: DELETE
+
+Success Response: 204 No Content
+
+Users & Authentication
+Endpoints for user registration, login, and managing watchlists.
+
+POST /api/v1/users/register
+Creates a new user account.
+
+Method: POST
+
+Request Body:
+
 {
-  "name": "Updated Product Name",
-  "description": "Updated description",
-  "is_active": true
+  "email": "user@example.com",
+  "password": "a_strong_password"
 }
-```
 
-#### DELETE /products/{product_id}
-Delete a tracked product.
+Success Response (201 Created): Returns the new user's data (without password).
 
-**Response:**
-```json
+POST /api/v1/users/token
+Authenticates a user and returns a JWT access token.
+
+Method: POST
+
+Request Body: application/x-www-form-urlencoded
+
+username: The user's email address.
+
+password: The user's password.
+
+Success Response (200 OK):
+
 {
-  "message": "Product deleted successfully"
+  "access_token": "eyJhbGciOiJI...",
+  "token_type": "bearer"
 }
-```
 
-#### GET /products/{product_id}/price-history
-Get price history for a specific product.
+GET /api/v1/users/me
+Retrieves the profile of the currently authenticated user.
 
-**Query Parameters:**
-- `limit`: int (default: 50) - Maximum number of price logs to return
+Method: GET
 
-**Response:**
-```json
+Authentication: Required.
+
+Success Response (200 OK): Returns the user's data, including their watchlist.
+
+POST /api/v1/users/me/watchlist/{product_id}
+Adds a product to the authenticated user's watchlist.
+
+Method: POST
+
+Authentication: Required.
+
+Success Response (200 OK): Returns the updated user profile.
+
+DELETE /api/v1/users/me/watchlist/{product_id}
+Removes a product from the authenticated user's watchlist.
+
+Method: DELETE
+
+Authentication: Required.
+
+Success Response (200 OK): Returns the updated user profile.
+
+Sales
+Endpoints for discovering e-commerce sales events.
+
+GET /api/v1/sales/
+Retrieves a list of ongoing and upcoming sales.
+
+Method: GET
+
+Success Response (200 OK):
+
 [
   {
     "id": 1,
-    "product_id": 1,
-    "price": 134900.0,
-    "discount_percentage": 0.0,
-    "availability": "In Stock",
-    "timestamp": "2025-01-01T00:00:00Z"
+    "title": "Great Indian Festival",
+    "store": "Amazon",
+    "discount_summary": "Up to 80% off",
+    "status": "ongoing",
+    "category": "Electronics"
   }
 ]
-```
 
-### Alerts
+WebSocket
+Endpoint for real-time updates.
 
-#### GET /alerts
-Get user's price alerts.
+GET /ws/updates
+Establishes a WebSocket connection.
 
-**Response:**
-```json
+URL: wss://ws.example.com/ws/updates
+
+Protocol: WebSocket
+
+Behavior: The server will push messages to the client when a price is updated. The client does not need to send any messages.
+
+Message Format (Server -> Client):
+
 {
-  "message": "Alerts endpoint - coming soon"
-}
-```
-
-#### POST /alerts
-Create a new price alert.
-
-**Response:**
-```json
-{
-  "message": "Create alert endpoint - coming soon"
-}
-```
-
-#### DELETE /alerts/{alert_id}
-Delete a price alert.
-
-**Response:**
-```json
-{
-  "message": "Delete alert {alert_id} endpoint - coming soon"
-}
-```
-
-### Sales
-
-#### GET /sales
-Get current sales and deals.
-
-**Response:**
-```json
-{
-  "message": "Sales endpoint - coming soon"
-}
-```
-
-#### GET /sales/trending
-Get trending sales.
-
-**Response:**
-```json
-{
-  "message": "Trending sales endpoint - coming soon"
-}
-```
-
-## Error Responses
-
-All endpoints return appropriate HTTP status codes:
-
-- `200`: Success
-- `201`: Created
-- `400`: Bad Request
-- `401`: Unauthorized
-- `403`: Forbidden
-- `404`: Not Found
-- `422`: Validation Error
-- `500`: Internal Server Error
-
-Error response format:
-```json
-{
-  "detail": "Error message"
-}
-```
-
-## Rate Limiting
-
-API endpoints are rate limited to prevent abuse:
-- 100 requests per minute per IP
-- 1000 requests per hour per authenticated user
-
-## WebSocket
-
-### Connection
-```
-ws://localhost:8000/ws
-```
-
-### Events
-- `price_update`: Sent when product prices change
-- `product_added`: Sent when new products are added
-- `sale_detected`: Sent when sales are detected
-
-### Message Format
-```json
-{
-  "type": "price_update",
+  "event": "price_update",
   "data": {
     "product_id": 1,
-    "new_price": 129900.0,
-    "old_price": 134900.0,
-    "change_percentage": -3.7
+    "new_price_cents": 2299000,
+    "currency": "INR",
+    "availability": "In Stock"
   }
 }
-```

@@ -1,16 +1,40 @@
+# --- [Unit] Section ---
+# This section contains metadata about the service and its dependencies.
 [Unit]
-Description=Price Trackr Application
-Requires=docker.service
+Description=Price Trackr Docker Compose Application Stack
+# After=docker.service specifies that this service should only start *after* the Docker daemon itself is running.
 After=docker.service
+# Requires=docker.service specifies a hard dependency. If the Docker service fails or is stopped, this service will also be stopped.
+Requires=docker.service
 
+
+# --- [Service] Section ---
+# This section defines how to start, stop, and manage the service.
 [Service]
-Type=oneshot
-RemainAfterExit=yes
-WorkingDirectory=/opt/price-trackr/infra
-ExecStart=/usr/bin/docker-compose up -d
-ExecStop=/usr/bin/docker-compose down
-ExecReload=/usr/bin/docker-compose restart
-TimeoutStartSec=0
+# WorkingDirectory sets the directory from which the start/stop commands will be executed.
+# This must be the root directory of your project where docker-compose.yml is located.
+WorkingDirectory=/opt/price-trackr
 
+# ExecStart defines the command to run to start the service.
+# `docker compose up -d` starts all services in the background.
+ExecStart=/usr/bin/docker compose up -d
+
+# ExecStop defines the command to run to stop the service.
+# `docker compose down` gracefully stops and removes all containers, networks, and volumes.
+ExecStop=/usr/bin/docker compose down
+
+# Type=oneshot indicates that the ExecStart process is short-lived.
+# Since `docker compose up -d` exits immediately after starting the containers, this is the correct type.
+Type=oneshot
+# RemainAfterExit=yes tells systemd that the service should be considered "active" even after the
+# ExecStart command has finished. This is essential for a 'oneshot' service that manages background processes.
+RemainAfterExit=yes
+
+
+# --- [Install] Section ---
+# This section defines how the service should be enabled or disabled.
 [Install]
+# WantedBy=multi-user.target is the standard way to make a service start
+# automatically at boot when the system reaches the normal multi-user runlevel.
 WantedBy=multi-user.target
+

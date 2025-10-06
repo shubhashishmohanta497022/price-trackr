@@ -1,93 +1,55 @@
+/* These are Tailwind CSS directives.
+  During the build process, PostCSS will replace these with the actual generated CSS code.
+  - `base`: Injects Tailwind's reset styles (Preflight) and any base styles registered by plugins.
+  - `components`: Injects Tailwind's component classes and any component classes registered by plugins.
+  - `utilities`: Injects Tailwind's utility classes and any utility classes registered by plugins.
+  It's crucial that these remain in this order.
+*/
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+  The `@layer` directive allows us to add custom styles while still taking advantage
+  of Tailwind's features like variants (hover:, focus:, etc.).
+  Styles in the 'base' layer can be thought of as default styles for raw HTML elements.
+*/
 @layer base {
-  * {
-    @apply border-border;
+  /*
+    Apply some sensible defaults to the entire application.
+  */
+  html {
+    /* Ensures smooth scrolling behavior for anchor links or programmatic scrolling. */
+    scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    /* Sets the default background and text colors for the entire app.
+      These custom colors (`brand-dark`, `brand-text-muted`) are defined in your `tailwind.config.js` file,
+      ensuring design consistency. This prevents a "flash of unstyled content" (FOUC) on page load.
+    */
+    @apply bg-brand-dark text-brand-text-muted;
   }
 }
 
-@layer components {
-  .btn {
-    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
-  }
-
-  .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700;
-  }
-
-  .btn-secondary {
-    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600;
-  }
-
-  .btn-success {
-    @apply bg-success-600 text-white hover:bg-success-700;
-  }
-
-  .btn-danger {
-    @apply bg-danger-600 text-white hover:bg-danger-700;
-  }
-
-  .card {
-    @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm;
-  }
-
-  .input {
-    @apply flex h-10 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
-  }
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
-/* Custom scrollbar */
+/*
+  Custom scrollbar styling for a more polished look that matches the dark theme.
+  Note: This styling is primarily for WebKit-based browsers (Chrome, Safari, Edge).
+  Firefox uses a different standard (`scrollbar-color`, `scrollbar-width`), which can also be added here.
+*/
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-gray-800;
+  @apply bg-brand-surface;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 dark:bg-gray-600 rounded-full;
+  @apply bg-brand-secondary rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500 dark:bg-gray-500;
-}
-
-/* Loading animation */
-.loading-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Price change animations */
-@keyframes priceUp {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-2px); }
-}
-
-@keyframes priceDown {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(2px); }
-}
-
-.price-up {
-  animation: priceUp 0.5s ease-in-out;
-  @apply text-success-600;
-}
-
-.price-down {
-  animation: priceDown 0.5s ease-in-out;
-  @apply text-danger-600;
+  @apply bg-brand-text-muted;
 }

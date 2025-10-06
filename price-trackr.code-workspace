@@ -1,48 +1,58 @@
 {
-    "folders": [
-        {
-            "name": "Backend",
-            "path": "./backend"
-        },
-        {
-            "name": "Frontend",
-            "path": "./frontend"
-        },
-        {
-            "name": "Worker",
-            "path": "./worker"
-        },
-        {
-            "name": "Extension",
-            "path": "./extension"
-        },
-        {
-            "name": "Infrastructure",
-            "path": "./infra"
-        },
-        {
-            "name": "Documentation",
-            "path": "./docs"
-        }
-    ],
-    "settings": {
-        "python.defaultInterpreterPath": "./backend/venv/bin/python",
-        "python.formatting.provider": "black",
-        "python.linting.enabled": true,
-        "python.linting.pylintEnabled": true,
-        "typescript.preferences.importModuleSpecifier": "relative",
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": true
-        }
-    },
-    "extensions": {
-        "recommendations": [
-            "ms-python.python",
-            "ms-python.black-formatter",
-            "bradlc.vscode-tailwindcss",
-            "esbenp.prettier-vscode",
-            "ms-vscode.vscode-typescript-next"
-        ]
-    }
+	"folders": [
+		{
+			"name": "Backend (FastAPI)",
+			"path": "backend"
+		},
+		{
+			"name": "Frontend (React)",
+			"path": "frontend"
+		},
+		{
+			"name": "Worker (Playwright)",
+			"path": "worker"
+		},
+		{
+			"name": "Infrastructure",
+			"path": "infra"
+		},
+		{
+			"name": "Documentation",
+			"path": "docs"
+		},
+		{
+			"name": "Extension",
+			"path": "extension"
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"**/__pycache__": true,
+			"**/.pytest_cache": true,
+			"**/node_modules": true
+		},
+		"python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+		"python.linting.pylintEnabled": true,
+		"python.linting.enabled": true,
+		"python.formatting.provider": "black",
+		"editor.formatOnSave": true,
+		"[python]": {
+			"editor.defaultFormatter": "ms-python.black-formatter"
+		},
+		"[typescriptreact]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode"
+		},
+		"[typescript]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode"
+		}
+	},
+	"recommendations": [
+		"ms-python.python",
+		"ms-python.vscode-pylance",
+		"ms-python.black-formatter",
+		"esbenp.prettier-vscode",
+		"ms-azuretools.vscode-docker",
+		"bradlc.vscode-tailwindcss"
+	]
 }
+
