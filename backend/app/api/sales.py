@@ -68,3 +68,4 @@ def get_active_sales():
     and updates a database table with this information.
     """
     return mock_sales_data
+

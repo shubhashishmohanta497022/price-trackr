@@ -1,20 +1,20 @@
-FastAPI & Server
+# FastAPI & Server
 fastapi
 uvicorn[standard]
 
-Database & ORM
+# Database & ORM
 sqlalchemy
 alembic
 psycopg2-binary
 
-Caching & Job Queues
+# Caching & Job Queues
 redis
 rq
 
-Configuration & Utilities
+# Configuration & Utilities
 pydantic-settings
 python-dotenv
 
-Security & Authentication
+# Security & Authentication
 passlib[bcrypt]
 python-jose[cryptography]

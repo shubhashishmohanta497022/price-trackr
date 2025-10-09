@@ -1,5 +1,5 @@
 # Stage 1: Build stage with build dependencies
-FROM python:3.11-slim as builder
+FROM python:3.12-slim as builder
 
 WORKDIR /app
 
@@ -9,11 +9,14 @@ RUN pip install poetry
 # Copy only dependency-defining files
 COPY poetry.lock pyproject.toml ./
 
+# Configure Poetry to create the venv in the project directory
+RUN poetry config virtualenvs.in-project true
+
 # Install dependencies without installing the project itself
 RUN poetry install --no-root
 
 # Stage 2: Final stage with minimal dependencies
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 

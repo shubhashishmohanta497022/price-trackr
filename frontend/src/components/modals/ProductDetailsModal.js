@@ -1,0 +1,18 @@
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import React from 'react';
+import { XMarkIcon, ExternalLinkIcon } from '@heroicons/react/24/outline';
+import { Product } from '../../types/product';
+import { formatPrice } from '../../utils/formatPrice';
+import Button from '../shared/Button';
+const ProductDetailsModal = ({ isOpen, onClose, product, onSetAlert, }) => {
+    if (!isOpen || !product)
+        return null;
+    const priceChange = product.original_price && product.current_price
+        ? ((product.current_price - product.original_price) / product.original_price) * 100
+        : 0;
+    return (_jsx("div", { className: "fixed inset-0 z-50 overflow-y-auto", children: _jsxs("div", { className: "flex min-h-screen items-center justify-center p-4", children: [_jsx("div", { className: "fixed inset-0 bg-black bg-opacity-25", onClick: onClose }), _jsxs("div", { className: "relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full p-6", children: [_jsxs("div", { className: "flex items-start justify-between mb-6", children: [_jsx("h3", { className: "text-xl font-semibold text-gray-900 dark:text-white pr-4", children: product.name }), _jsx("button", { onClick: onClose, className: "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0", children: _jsx(XMarkIcon, { className: "w-6 h-6" }) })] }), _jsxs("div", { className: "flex flex-col lg:flex-row gap-6", children: [product.image_url && (_jsx("div", { className: "lg:w-1/3", children: _jsx("img", { src: product.image_url, alt: product.name, className: "w-full h-48 lg:h-64 object-cover rounded-lg" }) })), _jsx("div", { className: "lg:flex-1", children: _jsxs("div", { className: "space-y-4", children: [_jsxs("div", { children: [_jsx("span", { className: "text-sm text-gray-600 dark:text-gray-400 capitalize", children: product.platform }), _jsxs("div", { className: "flex items-center space-x-3 mt-2", children: [product.current_price && (_jsx("span", { className: "text-2xl font-bold text-gray-900 dark:text-white", children: formatPrice(product.current_price) })), product.original_price && product.original_price !== product.current_price && (_jsxs(_Fragment, { children: [_jsx("span", { className: "text-lg text-gray-500 line-through", children: formatPrice(product.original_price) }), priceChange < 0 && (_jsxs("span", { className: "text-sm font-medium text-success-600 bg-success-50 px-2 py-1 rounded", children: [Math.abs(priceChange).toFixed(1), "% off"] }))] }))] })] }), _jsx("div", { children: _jsx("span", { className: `text-sm px-3 py-1 rounded-full ${product.availability === 'In Stock'
+                                                        ? 'bg-success-100 text-success-800'
+                                                        : 'bg-danger-100 text-danger-800'}`, children: product.availability }) }), product.description && (_jsxs("div", { children: [_jsx("h4", { className: "font-medium text-gray-900 dark:text-white mb-2", children: "Description" }), _jsx("p", { className: "text-gray-600 dark:text-gray-400 text-sm", children: product.description })] })), _jsxs("div", { className: "flex flex-col sm:flex-row gap-3 pt-4", children: [_jsx(Button, { onClick: () => onSetAlert?.(product.id), variant: "primary", className: "flex-1", children: "Set Price Alert" }), _jsxs(Button, { as: "a", href: product.url, target: "_blank", rel: "noopener noreferrer", variant: "secondary", className: "flex-1 inline-flex items-center justify-center", children: [_jsx(ExternalLinkIcon, { className: "w-4 h-4 mr-2" }), "Visit Product"] })] })] }) })] })] })] }) }));
+};
+export default ProductDetailsModal;
+//# sourceMappingURL=ProductDetailsModal.js.map

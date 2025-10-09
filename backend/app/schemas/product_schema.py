@@ -1,50 +1,63 @@
-from sqlalchemy import Column, Integer, String, BigInteger, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+from pydantic import BaseModel, HttpUrl
+from typing import List, Optional
+from datetime import datetime
 
-from ..database import Base
+# Import the PriceLog schema to use for nested responses
+from .price_schema import PriceLog
 
-class PriceLog(Base):
+# --- Product Schemas ---
+
+class ProductBase(BaseModel):
     """
-    SQLAlchemy model representing a single price data point for a product
-    at a specific point in time. This creates the historical price log.
+    Base schema for a product, containing fields that are common
+    across creation and reading.
     """
-    __tablename__ = "price_logs"
+    url: HttpUrl
+    title: str
+    brand: Optional[str] = None
+    image_url: Optional[HttpUrl] = None
+    sku: Optional[str] = None
 
-    # --- Table Columns ---
-    id = Column(Integer, primary_key=True, index=True)
-    
-    # The foreign key links this price log entry to a specific product.
-    # `ondelete="CASCADE"` means if a product is deleted, all its associated
-    # price logs will be deleted automatically by the database.
-    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
+class ProductCreate(ProductBase):
+    """
+    Schema used specifically for creating a new product.
+    In this case, it's identical to the base, but it could be extended
+    with additional fields needed only at creation time.
+    """
+    pass
 
-    # Storing price in the smallest currency unit (e.g., cents, paise) as an integer
-    # is a best practice to avoid floating-point precision issues with money.
-    # BigInteger is used to support very large price values if needed.
-    price_cents = Column(BigInteger, nullable=False)
-    
-    # ISO 4217 currency code (e.g., "USD", "INR", "EUR").
-    currency = Column(String(3), nullable=False)
-    
-    # The availability status scraped from the site (e.g., "In Stock", "Out of Stock").
-    availability = Column(String, nullable=True)
+class ProductTrackRequest(BaseModel):
+    """
+    Schema for the specific request body of the /track endpoint.
+    This keeps the API contract clear and simple.
+    """
+    url: HttpUrl
 
-    # The timestamp when the data was scraped.
-    # `server_default=func.now()` sets the default value to the current time
-    # on the database server when a new record is created.
-    scraped_at = Column(DateTime(timezone=True), server_default=func.now())
+class Product(ProductBase):
+    """
+    The main schema for reading/returning a product from the API.
+    This includes the database-generated ID.
+    """
+    id: int
 
-    # --- Relationships ---
-    
-    # Defines the many-to-one relationship back to the Product model.
-    # Many price log entries can belong to one product.
-    # 'back_populates' creates a two-way link with the 'price_logs' relationship in the Product model.
-    product = relationship("Product", back_populates="price_logs")
+    # Pydantic's configuration class to enable ORM mode.
+    # This allows the model to be created from an SQLAlchemy model instance.
+    class Config:
+        from_attributes = True
 
-    def __repr__(self):
-        return (
-            f"<PriceLog(id={self.id}, product_id={self.product_id}, "
-            f"price_cents={self.price_cents}, scraped_at={self.scraped_at})>"
-        )
+class ProductWithHistory(Product):
+    """
+    An extended schema for returning a product *with* its full price history.
+    This is used for the detailed product view endpoint.
+    """
+    price_history: List[PriceLog] = []
 
+
+# --- Alert Schemas (for the /api/alerts endpoints) ---
+
+class AlertCreate(BaseModel):
+    """
+    Schema for creating or updating a price alert for a product.
+    """
+    product_id: int
+    target_price_cents: int
