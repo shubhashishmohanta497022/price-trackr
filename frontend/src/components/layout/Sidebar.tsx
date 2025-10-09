@@ -8,7 +8,14 @@ import {
   CogIcon,
 } from '@heroicons/react/24/outline'
 
-const navigation = [
+// Define the shape of a navigation item
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: ChartBarIcon },
   { name: 'Watchlist', href: '/watchlist', icon: HeartIcon },
   { name: 'Add Product', href: '/add-product', icon: PlusIcon },

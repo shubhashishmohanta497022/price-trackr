@@ -8,8 +8,15 @@ import {
 } from '@heroicons/react/24/outline'
 import { useTheme } from '../../context/ThemeContext'
 
+// Define the shape of the data returned by the useTheme hook
+interface ThemeContextType {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+}
+
 const Header: React.FC = () => {
-  const { theme, toggleTheme } = useTheme()
+  // Apply the type to the hook's return value
+  const { theme, toggleTheme } = useTheme() as ThemeContextType;
 
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
@@ -58,4 +65,4 @@ const Header: React.FC = () => {
   )
 }
 
-export default Header
+export default Header;

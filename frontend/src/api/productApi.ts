@@ -1,6 +1,12 @@
 import axiosClient from './axiosClient'
 import { Product, ProductCreate } from '../types/product'
 
+// Define the shape of a single price history record
+interface PriceHistoryEntry {
+  price: number;
+  date: string; // This could also be a Date object if you parse it
+}
+
 export const productApi = {
   getProducts: async (): Promise<Product[]> => {
     const response = await axiosClient.get('/api/products')
@@ -26,7 +32,8 @@ export const productApi = {
     await axiosClient.delete(`/api/products/${id}`)
   },
 
-  getProductPriceHistory: async (id: number) => {
+  // Add the explicit return type here
+  getProductPriceHistory: async (id: number): Promise<PriceHistoryEntry[]> => {
     const response = await axiosClient.get(`/api/products/${id}/price-history`)
     return response.data
   },
