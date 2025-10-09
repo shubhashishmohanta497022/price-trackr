@@ -32,9 +32,14 @@ export const productApi = {
     await axiosClient.delete(`/api/products/${id}`)
   },
 
-  // Add the explicit return type here
   getProductPriceHistory: async (id: number): Promise<PriceHistoryEntry[]> => {
     const response = await axiosClient.get(`/api/products/${id}/price-history`)
     return response.data
+  },
+
+  // ADDED THIS FUNCTION
+  trackProduct: async (url: string): Promise<Product> => {
+    const response = await axiosClient.post('/api/products/track', { url });
+    return response.data;
   },
 }

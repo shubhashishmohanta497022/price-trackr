@@ -1,67 +1,61 @@
 import { useState } from 'react';
-import { CheckCircle, Info, LoaderCircle, Sparkles } from 'lucide-react';
-import clsx from 'clsx';
-import { productApi } from '@/api/productApi'; // Import your API client
-
-// ... (SiteCard component remains the same) ...
+import { LoaderCircle } from 'lucide-react';
+import { productApi } from '@/api/productApi';
 
 const AddProduct = () => {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [feedback, setFeedback] = useState({ message: '', type: '' });
-  
-  // ... (supportedSites array remains the same) ...
+  const [feedbackMessage, setFeedbackMessage] = useState({ message: '', type: '' });
 
   const handleTrackProduct = async () => {
     if (!url || !url.startsWith('http')) {
-      setFeedback({ message: 'Please enter a valid product URL.', type: 'error' });
+      setFeedbackMessage({ message: 'Please enter a valid product URL.', type: 'error' });
       return;
     }
 
     setIsLoading(true);
-    setFeedback({ message: '', type: '' });
+    setFeedbackMessage({ message: '', type: '' });
 
     try {
-      // Use the API client to send the request to the backend
       await productApi.trackProduct(url);
-      setFeedback({ message: 'Success! Product is now being tracked and scraped.', type: 'success' });
+      setFeedbackMessage({ message: 'Success! Product is now being tracked.', type: 'success' });
       setUrl('');
     } catch (error) {
       console.error("Tracking error:", error);
-      setFeedback({ message: 'Failed to track product. The URL might be unsupported or an error occurred.', type: 'error' });
+      setFeedbackMessage({ message: 'Failed to track product.', type: 'error' });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ... (JSX remains the same) ...
   return (
     <div className="p-6 md:p-8 space-y-8">
-      {/* ... header ... */}
       <div className="bg-brand-surface p-6 rounded-lg">
-        {/* ... form ... */}
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             id="productUrl"
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            // ... other props
+            placeholder="Enter product URL to start tracking"
+            className="w-full bg-brand-dark border border-brand-secondary rounded-md px-4 py-2 text-brand-text focus:ring-2 focus:ring-brand-primary focus:outline-none"
           />
           <button
             onClick={handleTrackProduct}
             disabled={isLoading}
-            // ... other props
+            className="bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold py-2 px-4 rounded-md flex items-center justify-center w-full sm:w-auto"
           >
-            {isLoading ? <LoaderCircle size={20} className="animate-spin" /> : 'Save'}
+            {isLoading ? <LoaderCircle size={20} className="animate-spin" /> : 'Track Product'}
           </button>
         </div>
-         {/* ... feedback message ... */}
+        {feedbackMessage.message && (
+          <p className={`mt-4 text-sm ${feedbackMessage.type === 'error' ? 'text-red-400' : 'text-green-400'}`}>
+            {feedbackMessage.message}
+          </p>
+        )}
       </div>
-      {/* ... other sections ... */}
     </div>
   );
 };
 
 export default AddProduct;
-
