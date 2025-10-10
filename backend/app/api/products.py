@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Response, status
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
 from sqlalchemy.orm import Session
 from typing import List
 from redis import Redis
 from rq import Queue
 
 from .. import crud
-from ..schemas import product_schema, price_schema
+from ..schemas import product_schema
 from ..database import get_db
 from ..config import settings
 # A placeholder for the actual worker task function
@@ -91,6 +91,7 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     """
     Delete a tracked product and all of its associated data.
     """
+    from fastapi import Response
     db_product = crud.products.get_product(db, product_id=product_id)
     if db_product is None:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -98,4 +99,3 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     db.delete(db_product)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-

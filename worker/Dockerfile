@@ -1,7 +1,7 @@
 # Use the official Playwright image from Microsoft's container registry.
 # This image comes with Python and all necessary browser binaries (Chromium, Firefox, WebKit)
 # and their system-level dependencies pre-installed, which is a massive convenience.
-FROM mcr.microsoft.com/playwright/python:v1.44.0-jammy
+FROM mcr.microsoft.com/playwright/python:v1.45.0-jammy
 
 # Set the working directory inside the container. All subsequent commands
 # will be run from this path.

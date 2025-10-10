@@ -1,6 +1,23 @@
-import React from 'react'
-import clsx from 'clsx'
-import { Loader } from './Loader'
+import clsx from 'clsx';
+
+// Inlined Loader component to resolve the import error
+const Loader: React.FC<{ className?: string, size?: 'sm' | 'md' | 'lg' }> = ({ className, size = 'md' }) => {
+  const sizeClasses = {
+    sm: 'w-4 h-4',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8',
+  };
+  return (
+    <div
+      className={clsx(
+        'animate-spin rounded-full border-2 border-gray-300 border-t-primary-600',
+        sizeClasses[size],
+        className
+      )}
+    />
+  );
+};
+
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'outline'
@@ -76,3 +93,4 @@ const Button: React.FC<ButtonProps> = ({
 }
 
 export default Button
+

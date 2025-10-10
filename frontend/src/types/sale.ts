@@ -14,6 +14,16 @@ export interface Sale {
   confidence_score: number
 }
 
+export interface SaleEvent {
+  id: number;
+  title: string;
+  store: string;
+  discount_summary: string;
+  status: 'ongoing' | 'upcoming' | 'top_deal';
+  category: string;
+  details: string;
+}
+
 export interface TrendingSale extends Sale {
   popularity_score: number
   view_count: number
@@ -26,3 +36,4 @@ export interface SaleFilter {
   max_price?: number
   category?: string
 }
+

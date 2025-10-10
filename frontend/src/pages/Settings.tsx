@@ -1,10 +1,28 @@
 import React, { useState } from 'react';
-import { Palette, Bell, Shield, Database, Globe, HelpCircle } from 'lucide-react';
-import { Switch } from "@/components/shared/Switch";
-import Button from "@/components/shared/Button";
+import { Palette, HelpCircle } from 'lucide-react';
 import clsx from 'clsx';
 
-// ... (interfaces and useSettingsStore hook remain the same) ...
+// Placeholder Switch component
+const Switch = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (checked: boolean) => void }) => (
+    <button
+        type="button"
+        className={`${
+            checked ? 'bg-indigo-600' : 'bg-gray-200'
+        } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2`}
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onCheckedChange(!checked)}
+    >
+        <span
+            aria-hidden="true"
+            className={`${
+                checked ? 'translate-x-5' : 'translate-x-0'
+            } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+        />
+    </button>
+);
+
+
 interface SettingsState {
   theme: 'light' | 'dark';
   compactMode: boolean;
@@ -105,22 +123,17 @@ const Settings = () => {
         <p className="text-brand-text-muted">Configure your preferences.</p>
       </div>
       
-      <SettingsSection icon={<Palette className="text-brand-primary" />} title="Appearance" description="Customize the look and feel.">
+      <SettingsSection icon={<Palette className="text-brand-primary" />} title="Appearance" description="Customize the look and feel of the application.">
         <SettingRow title="Theme" description="Choose your preferred theme.">
           <div className="flex gap-2 rounded-md bg-brand-dark p-1">
               <button onClick={() => updateSetting('theme', 'light')} className={clsx("px-4 py-1 rounded text-sm font-semibold", settings.theme === 'light' ? 'bg-brand-surface text-brand-text' : 'text-brand-text-muted')}>Light</button>
               <button onClick={() => updateSetting('theme', 'dark')} className={clsx("px-4 py-1 rounded text-sm font-semibold", settings.theme === 'dark' ? 'bg-brand-surface text-brand-text' : 'text-brand-text-muted')}>Dark</button>
           </div>
         </SettingRow>
-        <SettingRow title="Compact Mode" description="Reduce padding.">
+        <SettingRow title="Compact Mode" description="Reduce padding to show more on screen.">
             <Switch checked={settings.compactMode} onCheckedChange={(val: boolean) => updateSetting('compactMode', val)} />
         </SettingRow>
       </SettingsSection>
-
-      <div className="flex justify-end gap-4 pt-4 border-t border-brand-secondary">
-          <Button variant="secondary">Revert to Default</Button>
-          <Button>Save Settings</Button>
-      </div>
     </div>
   );
 };

@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { ArrowDownRight, BarChart, Heart, ShieldOff, ShoppingCart } from 'lucide-react';
 import StatCard from '../components/cards/StatCard';
 import ProductCard from '../components/cards/ProductCard';
 import { Product } from '../types/product'; // Assuming you have this type
-
-const API_URL = 'http://localhost:8000/api';
 
 // Simple placeholder for SystemHealthItem
 const SystemHealthItem = ({ name, status, uptime }: { name: string, status: string, uptime: number }) => (
