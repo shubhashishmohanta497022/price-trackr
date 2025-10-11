@@ -1,13 +1,6 @@
-# Core Scraping Libraries
-playwright==1.44.0
+playwright==1.47.0
 beautifulsoup4==4.12.3
-
-# Job Queue & Caching
+lxml==5.2.2
+requests==2.32.3
+redis==5.0.8
 rq==1.16.2
-redis==5.0.4
-
-# Database Connector
-psycopg2-binary==2.9.10
-
-# Configuration
-python-dotenv==1.0.1

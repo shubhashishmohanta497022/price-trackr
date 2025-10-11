@@ -1,50 +1,53 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, Integer, String, BigInteger, ForeignKey, DateTime, Boolean, UniqueConstraint, Text
 from sqlalchemy.orm import relationship
-
+from datetime import datetime, timezone
 from ..database import Base
 
 class Product(Base):
-    """
-    SQLAlchemy model representing a product being tracked.
-    Each row in this table is a unique product from an e-commerce site.
-    """
     __tablename__ = "products"
-
-    # --- Table Columns ---
     id = Column(Integer, primary_key=True, index=True)
-    
-    # The unique URL of the product page. This is the main identifier.
-    url = Column(String, unique=True, index=True, nullable=False)
-    
-    # Scraped information about the product.
-    title = Column(String, index=True, nullable=False)
-    brand = Column(String, nullable=True)
-    image_url = Column(Text, nullable=True) # Using Text for potentially long URLs
-    sku = Column(String, unique=True, nullable=True, index=True, comment="Stock Keeping Unit or Product Code")
+    title = Column(String(512), nullable=False)
+    sku = Column(String(128), nullable=True, index=True)
+    brand = Column(String(128), nullable=True)
+    sources = relationship("ProductSource", back_populates="product", cascade="all, delete-orphan")
 
-    # --- Relationships ---
-    
-    # Defines a one-to-many relationship with the PriceLog model.
-    # One product can have many price log entries over time.
-    # 'back_populates' creates a two-way link with the 'product' relationship in the PriceLog model.
-    # 'cascade="all, delete-orphan"' ensures that when a product is deleted, all of its associated
-    # price history records are also automatically deleted.
-    price_logs = relationship(
-        "PriceLog", 
-        back_populates="product", 
-        cascade="all, delete-orphan"
-    )
+class Source(Base):
+    __tablename__ = "sources"
+    id = Column(Integer, primary_key=True)
+    domain = Column(String(255), unique=True, index=True, nullable=False)
+    site_name = Column(String(128), nullable=False)
+    trust_score = Column(Integer, default=50)
 
-    # Defines the many-to-many relationship with the User model.
-    # This relationship is managed through the 'user_watchlist' association table (defined in user.py).
-    # It allows many users to watch many products.
-    # 'back_populates' links to the 'watchlist' relationship in the User model.
-    watchers = relationship(
-        "User", 
-        secondary="user_watchlist", 
-        back_populates="watchlist"
-    )
+class ProductSource(Base):
+    __tablename__ = "product_sources"
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
+    source_id = Column(Integer, ForeignKey("sources.id", ondelete="CASCADE"), nullable=False)
+    url = Column(Text, nullable=False)
+    product = relationship("Product", back_populates="sources")
+    source = relationship("Source")
+    __table_args__ = (UniqueConstraint("product_id", "source_id", name="uq_product_source"),)
 
-    def __repr__(self):
-        return f"<Product(id={self.id}, title='{self.title[:30]}...')>"
+class PriceHistory(Base):
+    __tablename__ = "price_history"
+    id = Column(Integer, primary_key=True)
+    product_source_id = Column(Integer, ForeignKey("product_sources.id", ondelete="CASCADE"), nullable=False, index=True)
+    price_cents = Column(BigInteger, nullable=False)
+    currency = Column(String(8), nullable=False, default="INR")
+    availability = Column(String(64), nullable=True)
+    scraped_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    __table_args__ = (UniqueConstraint("product_source_id", "scraped_at", name="uq_price_time"),)
 
+class Watchlist(Base):
+    __tablename__ = "watchlists"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(String(128), index=True, nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
+    alert_rules = Column(Text, nullable=True)  # JSON string with thresholds/regions
+
+class ScamScore(Base):
+    __tablename__ = "scam_scores"
+    domain = Column(String(255), primary_key=True)
+    whois_days_old = Column(Integer, default=0)
+    safe_browsing_flag = Column(Boolean, default=True)
+    trust_signals = Column(Text, nullable=True)

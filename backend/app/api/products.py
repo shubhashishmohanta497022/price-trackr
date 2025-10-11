@@ -1,101 +1,70 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
-from redis import Redis
+from urllib.parse import urlparse
+from ..database import SessionLocal
+from ..models.product import Product, Source, ProductSource, PriceHistory
+from ..schemas.product_schema import TrackRequest, ProductOut, PricePoint
+import re
+import json
+import redis, os
 from rq import Queue
 
-from .. import crud
-from ..schemas import product_schema
-from ..database import get_db
-from ..config import settings
-# A placeholder for the actual worker task function
-# from ..services.scraper_sync import queue_scrape_task 
+router = APIRouter(prefix="/api")
 
-# --- A placeholder for the real task queuing function ---
-# In a real setup, this might live in `services/scraper_sync.py`
-# For now, we define it here for simplicity.
-def queue_scrape_task(product_id: int):
-    """
-    Connects to Redis and enqueues a scraping task for the worker.
-    """
+def get_db():
+    db = SessionLocal()
     try:
-        # NOTE: This connection should ideally be managed more globally
-        redis_conn = Redis(
-            host=settings.REDIS_HOST, 
-            port=settings.REDIS_PORT, 
-            password=settings.REDIS_PASSWORD
-        )
-        q = Queue('scraping_tasks', connection=redis_conn)
-        q.enqueue('playwright_scraper.runner.scrape_product_by_id', product_id)
-        print(f"Successfully queued scrape task for product_id: {product_id}")
-    except Exception as e:
-        # In a real app, you would have more robust logging here
-        print(f"Error connecting to Redis or enqueuing task: {e}")
-# --- End of placeholder ---
+        yield db
+    finally:
+        db.close()
 
+def norm_domain(url: str) -> str:
+    p = urlparse(url)
+    return re.sub(r"^www\\.", "", p.netloc.lower())
 
-router = APIRouter()
+@router.post("/track")
+def track(req: TrackRequest, db: Session = Depends(get_db)):
+    domain = norm_domain(str(req.url))
+    site_name = domain.split(".")[0].title()
 
-@router.post("/track", response_model=product_schema.Product, status_code=status.HTTP_202_ACCEPTED)
-def track_new_product(
-    product_request: product_schema.ProductTrackRequest,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db)
-):
-    """
-    Accepts a product URL to track.
+    source = db.query(Source).filter_by(domain=domain).one_or_none()
+    if not source:
+        source = Source(domain=domain, site_name=site_name, trust_score=50)
+        db.add(source); db.flush()
 
-    - If the product URL is already in the database, it returns the existing product.
-    - If it's a new URL, it creates a placeholder product.
-    - In both cases, it adds a scraping job to the background queue to fetch/update
-      the product's details and price.
-    """
-    # Use a CRUD helper to either get the existing product or create a new one.
-    # We create a placeholder here. The worker will fill in the details.
-    placeholder_data = product_schema.ProductCreate(
-        url=str(product_request.url),
-        title=f"Tracking new product from {product_request.url.host}...",
-        # Other fields can be None/default initially
-    )
-    db_product = crud.products.get_or_create_product(db, product_data=placeholder_data)
-    
-    # Add the scraping task to run in the background.
-    # This ensures the API can respond immediately.
-    background_tasks.add_task(queue_scrape_task, db_product.id)
-    
-    return db_product
+    # Try to reuse product by matching normalized title later; for MVP create shell
+    product = Product(title="Pending scrape", brand=None, sku=None)
+    db.add(product); db.flush()
 
-@router.get("/", response_model=List[product_schema.Product])
-def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """
-    Retrieve a list of all tracked products with pagination.
-    """
-    products = crud.products.get_products(db, skip=skip, limit=limit)
-    return products
+    ps = ProductSource(product_id=product.id, source_id=source.id, url=str(req.url))
+    db.add(ps); db.commit()
 
-@router.get("/{product_id}", response_model=product_schema.ProductWithHistory)
-def read_product(product_id: int, db: Session = Depends(get_db)):
-    """
-    Retrieve a single product by its ID, including its full price history.
-    """
-    db_product = crud.products.get_product(db, product_id=product_id)
-    if db_product is None:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    # Manually attach price history for the response model
-    db_product.price_history = crud.prices.get_price_logs_for_product(db, product_id=product_id)
-    return db_product
+    r = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
+    q = Queue("scrape_default", connection=r)
+    q.enqueue("playwright_scraper.runner.scrape_product_source", ps.id, ps.url)
 
-@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_product(product_id: int, db: Session = Depends(get_db)):
-    """
-    Delete a tracked product and all of its associated data.
-    """
-    from fastapi import Response
-    db_product = crud.products.get_product(db, product_id=product_id)
-    if db_product is None:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    db.delete(db_product)
-    db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return {"product_id": product.id, "queued": True}
+
+@router.get("/product/{product_id}", response_model=ProductOut)
+def product(product_id: int, db: Session = Depends(get_db)):
+    p = db.get(Product, product_id)
+    if not p:
+        raise HTTPException(404, "Product not found")
+    # lowest price across sources
+    subq = db.query(PriceHistory.price_cents, PriceHistory.currency)\
+             .join(ProductSource, ProductSource.id == PriceHistory.product_source_id)\
+             .filter(ProductSource.product_id == product_id)\
+             .order_by(PriceHistory.price_cents.asc()).first()
+    lowest_price_cents, currency = (subq[0], subq[1]) if subq else (None, "INR")
+    return ProductOut(id=p.id, title=p.title, brand=p.brand, lowest_price_cents=lowest_price_cents, currency=currency)
+
+@router.get("/product/{product_id}/history", response_model=list[PricePoint])
+def history(product_id: int, db: Session = Depends(get_db)):
+    rows = db.query(PriceHistory)\
+        .join(ProductSource, ProductSource.id == PriceHistory.product_source_id)\
+        .filter(ProductSource.product_id == product_id)\
+        .order_by(PriceHistory.scraped_at.asc()).all()
+    return [
+        PricePoint(price_cents=r.price_cents, currency=r.currency, availability=r.availability, scraped_at=r.scraped_at)
+        for r in rows
+    ]

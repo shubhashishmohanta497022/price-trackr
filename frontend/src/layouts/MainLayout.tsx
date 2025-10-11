@@ -1,27 +1,35 @@
-import React from 'react'
-import { Outlet } from 'react-router-dom'
-import Header from '../components/layout/Header'
-import Sidebar from '../components/layout/Sidebar'
-import Footer from '../components/layout/Footer'
+import React, { useState } from 'react';
+import { Header } from '../components/layout/Header';
+import { Sidebar } from '../components/layout/Sidebar';
 
-const MainLayout: React.FC = () => {
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-
-      <div className="flex">
-        <Sidebar />
-
-        <main className="flex-1 min-w-0">
-          <div className="p-6">
-            <Outlet />
-          </div>
-        </main>
-      </div>
-
-      <Footer />
-    </div>
-  )
+interface MainLayoutProps {
+  children: React.ReactNode;
 }
 
-export default MainLayout
+export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  return (
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
+      <div className="bg-gray-900 dark:bg-gray-900 text-white min-h-screen">
+        <Header 
+          onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+          theme={theme}
+          onThemeToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        />
+        
+        <div className="flex">
+          <Sidebar 
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+          />
+          
+          <main className="flex-1 p-6 ml-0 lg:ml-64 transition-all duration-300">
+            {children}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+};

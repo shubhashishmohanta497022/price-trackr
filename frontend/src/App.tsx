@@ -1,44 +1,32 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from "react";
+import api from "./api/axiosClient";
+import { useWebSocket } from "./hooks/useWebSocket";
 
-// Import the main layout component that provides the consistent shell (sidebar, header).
-import MainLayout from '@/layouts/MainLayout';
+const WS_URL = import.meta.env.VITE_WS_URL || "wss://ws.example.com/ws/updates";
 
-// Import all the page components that will be rendered for different routes.
-import Dashboard from '@/pages/Dashboard';
-import Watchlist from '@/pages/Watchlist';
-import AddProduct from '@/pages/AddProduct';
-import Sales from '@/pages/Sales';
-import Settings from '@/pages/Settings';
+export default function App() {
+  const [url, setUrl] = useState("");
+  const messages = useWebSocket(WS_URL);
 
-function App() {
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await api.post("/api/track", { url });
+    setUrl("");
+  };
+
   return (
-    // The Routes component is the main router that looks at the current URL
-    // and decides which Route to render.
-    <Routes>
-      {/* This is a layout route. It renders the MainLayout component, which in turn
-        will render any matching child routes inside its <Outlet />.
-        This is how we get a persistent sidebar and header on every page.
-      */}
-      <Route path="/" element={<MainLayout />}>
-        {/* The index route is the default page to show when the path is just "/". */}
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        
-        {/* Define the route for each page in your application. */}
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="watchlist" element={<Watchlist />} />
-        <Route path="add" element={<AddProduct />} />
-        <Route path="sales" element={<Sales />} />
-        <Route path="settings" element={<Settings />} />
-
-        {/* This is a catch-all route. If the user navigates to any path that
-          doesn't match the ones defined above (e.g., /some-random-page),
-          it will automatically redirect them back to the dashboard.
-        */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Route>
-    </Routes>
+    <div className="p-4 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Price-Trackr</h1>
+      <form onSubmit={submit} className="flex gap-2 mb-6">
+        <input className="border p-2 flex-1" value={url} onChange={e=>setUrl(e.target.value)} placeholder="Paste product URL"/>
+        <button className="bg-blue-600 text-white px-4 py-2 rounded">Track</button>
+      </form>
+      <div>
+        <h2 className="font-semibold mb-2">Live updates</h2>
+        <ul className="space-y-1 text-sm">
+          {messages.slice(-10).map((m,i)=> <li key={i}><code>{m}</code></li>)}
+        </ul>
+      </div>
+    </div>
   );
 }
-
-export default App;
-

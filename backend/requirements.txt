@@ -1,20 +1,10 @@
-# FastAPI & Server
-fastapi
-uvicorn[standard]
-
-# Database & ORM
-sqlalchemy
-alembic
-psycopg2-binary
-
-# Caching & Job Queues
-redis
-rq
-
-# Configuration & Utilities
-pydantic-settings
-python-dotenv
-
-# Security & Authentication
-passlib[bcrypt]
-python-jose[cryptography]
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+pydantic==2.8.2
+SQLAlchemy==2.0.34
+alembic==1.13.2
+psycopg2-binary==2.9.9
+redis==5.0.8
+rq==1.16.2
+python-dotenv==1.0.1
+itsdangerous==2.2.0
